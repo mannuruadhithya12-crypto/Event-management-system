@@ -7,16 +7,35 @@ import { Users, UserPlus, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 
+interface TeamMember {
+    name: string;
+    role: string;
+}
+
+interface Team {
+    id: string;
+    name: string;
+    hackathon: string;
+    role: string;
+    members: TeamMember[];
+}
+
 const StudentTeamsDashboard = () => {
     const { user } = useAuthStore();
-    const [teams, setTeams] = useState([]);
+    const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchTeams = async () => {
+            // TODO: Create endpoint for getting all teams a student is part of
+            // Mock for now or implement /teams/student/:userId
             try {
-                // TODO: Replace with real API
-                // const response = await api.get(`/teams/student/${user?.id}`);
+                const response = await api.get<Team[]>(`/hackathons/teams/student/${user?.id}`);
+                if (!response) throw new Error("No data");
+                setTeams(response);
+            } catch (error) {
+                console.error("Failed to fetch teams", error);
+                // Fallback to mock data
                 setTeams([
                     {
                         id: '1',
@@ -29,8 +48,6 @@ const StudentTeamsDashboard = () => {
                         ]
                     }
                 ]);
-            } catch (error) {
-                console.error("Failed to fetch teams");
             } finally {
                 setLoading(false);
             }

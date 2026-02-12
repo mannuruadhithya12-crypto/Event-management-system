@@ -60,6 +60,19 @@ public class HackathonServiceImpl implements HackathonService {
     }
 
     @Override
+    public List<Hackathon> getHackathonsByStudent(String userId) {
+        return teamMemberRepository.findByUserId(userId).stream()
+                .map(tm -> tm.getTeam().getHackathon())
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public List<Hackathon> getHackathonsByOrganizer(String organizerId) {
+        return hackathonRepository.findByOrganizerId(organizerId);
+    }
+
+    @Override
     public ProblemStatement addProblemStatement(String hackathonId, ProblemStatement problemStatement) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new RuntimeException("Hackathon not found"));
@@ -136,6 +149,13 @@ public class HackathonServiceImpl implements HackathonService {
     @Override
     public List<TeamMember> getTeamMembers(String teamId) {
         return teamMemberRepository.findByTeamId(teamId);
+    }
+
+    @Override
+    public List<Team> getTeamsByStudent(String userId) {
+        return teamMemberRepository.findByUserId(userId).stream()
+                .map(TeamMember::getTeam)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override

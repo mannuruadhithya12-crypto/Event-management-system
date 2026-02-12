@@ -25,4 +25,20 @@ public class ClubMembership {
 
     private LocalDateTime joinedAt = LocalDateTime.now();
     private String status; // ACTIVE, PENDING, INACTIVE
+
+    public void setClub(Club club) {
+        this.club = club;
+    }
+
+    public Club getClub() {
+        return club;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public User getUser() {
+        return user;
+    }
 }

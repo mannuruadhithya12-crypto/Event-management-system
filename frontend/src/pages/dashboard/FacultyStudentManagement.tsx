@@ -6,9 +6,17 @@ import { Search, Check, X } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { api } from '@/lib/api';
 
+interface Student {
+    id: number;
+    name: string;
+    email: string;
+    status: string;
+    cgpa: number;
+}
+
 const FacultyStudentManagement = () => {
     const { user } = useAuthStore();
-    const [students, setStudents] = useState([]);
+    const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
 

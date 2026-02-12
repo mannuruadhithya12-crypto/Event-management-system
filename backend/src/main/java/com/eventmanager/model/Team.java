@@ -21,11 +21,8 @@ public class Team {
     @JoinColumn(name = "leader_id")
     private User leader;
 
-    // For members, we might need a separate join table or a OneToMany if we want to
-    // track members closely.
-    // Simplify for now, maybe just a JSON string or simplified relation if strict
-    // relational mapping is too complex for this stage.
-    // But let's try a strict mapping.
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private java.util.List<TeamMember> members;
 
     private String projectName;
 

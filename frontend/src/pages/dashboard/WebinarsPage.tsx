@@ -30,29 +30,9 @@ const WebinarsPage = () => {
                 setWebinars(data);
             } catch (error) {
                 console.error("Failed to fetch webinars:", error);
-                // Mock data if API fails
-                setWebinars([
-                    {
-                        id: '1',
-                        title: 'Mastering Full-Stack Development in 2024',
-                        description: 'Join us for an intensive session on the latest trends in full-stack dev.',
-                        speaker: 'Dr. Sarah Mitchell',
-                        startTime: new Date(Date.now() + 86400000).toISOString(),
-                        category: 'Technology',
-                        bannerUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800',
-                        status: 'upcoming'
-                    },
-                    {
-                        id: '2',
-                        title: 'Entrepreneurship 101: From Idea to Launch',
-                        description: 'Learn the essentials of starting your own business while in college.',
-                        speaker: 'James Wilson',
-                        startTime: new Date(Date.now() - 86400000).toISOString(),
-                        category: 'Business',
-                        bannerUrl: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800',
-                        status: 'recorded'
-                    }
-                ]);
+                // Don't fallback to mock data silently, let the empty state handle it or show toast
+                // But for now, if it fails, we can just show empty list
+                setWebinars([]);
             } finally {
                 setLoading(false);
             }

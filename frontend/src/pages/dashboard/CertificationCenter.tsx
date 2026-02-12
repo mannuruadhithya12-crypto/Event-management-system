@@ -45,14 +45,23 @@ const CertificationCenter = () => {
     }, [user]);
 
     const handleDownload = async (certId: string) => {
-        toast.promise(
-            new Promise(resolve => setTimeout(resolve, 2000)),
-            {
-                loading: 'Authenticating digital signature...',
-                success: 'Certificate downloaded successfully!',
-                error: 'Failed to generate PDF',
-            }
-        );
+        try {
+            const blob = await certificateApi.download(certId);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `certificate-${certId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            // Cleanup memory
+            setTimeout(() => window.URL.revokeObjectURL(url), 100);
+
+            toast.success('Certificate downloaded successfully!');
+        } catch (error) {
+            console.error("Download failed", error);
+            toast.error('Failed to download certificate');
+        }
     };
 
     const filteredCertificates = certificates.filter(cert =>

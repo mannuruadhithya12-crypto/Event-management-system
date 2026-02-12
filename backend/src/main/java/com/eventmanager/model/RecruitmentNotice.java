@@ -31,4 +31,12 @@ public class RecruitmentNotice {
     private String status = "OPEN"; // OPEN, CLOSED
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getRole() {
+        return role;
+    }
 }

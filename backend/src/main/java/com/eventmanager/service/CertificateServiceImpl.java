@@ -64,8 +64,10 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public byte[] downloadCertificatePdf(String certificateId) {
-        // Mock PDF generation logic
-        return "PDF content for certificate".getBytes();
+        // Mock PDF generation for now to avoid build issues with missing dependencies
+        // TODO: Implement real PDF generation using OpenPDF or iText
+        String mockContent = "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>\nendobj\n4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n5 0 obj\n<< /Length 44 >>\nstream\nBT /F1 24 Tf 100 700 Td (Certificate Placeholder) Tj ET\nendstream\nendobj\nxref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000060 00000 n \n0000000157 00000 n \n0000000302 00000 n \n0000000392 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n486\n%%EOF";
+        return mockContent.getBytes();
     }
 
     @Override

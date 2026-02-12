@@ -6,16 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Trophy, Users, Award } from 'lucide-react';
 import { useAuthStore } from '@/store';
 
+interface Hackathon {
+    id: string;
+    title: string;
+    status: string;
+    date: string;
+    team: string;
+    result?: string;
+}
+
 const StudentHackathonDashboard = () => {
     const { user } = useAuthStore();
-    const [hackathons, setHackathons] = useState([]);
+    const [hackathons, setHackathons] = useState<Hackathon[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchHackathons = async () => {
             try {
                 // TODO: Replace with specific endpoint for student's hackathons
-                const response = await api.get(`/hackathons/student/${user?.id}`);
+                const response = await api.get<Hackathon[]>(`/hackathons/student/${user?.id}`);
                 // Fallback mock data if API fails or is not implemented yet
                 if (!response) throw new Error("No data");
                 setHackathons(response);

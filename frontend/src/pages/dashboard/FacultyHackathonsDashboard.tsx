@@ -5,16 +5,24 @@ import { Plus, Users, Award } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { api } from '@/lib/api';
 
+interface Hackathon {
+    id: string;
+    title: string;
+    teams: number;
+    submissions: number;
+    status: string;
+}
+
 const FacultyHackathonsDashboard = () => {
     const { user } = useAuthStore();
-    const [hackathons, setHackathons] = useState([]);
+    const [hackathons, setHackathons] = useState<Hackathon[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchHackathons = async () => {
             try {
                 // TODO: Fetch hackathons organized by faculty
-                const response = await api.get(`/faculty/hackathons/${user?.id}`);
+                const response = await api.get<Hackathon[]>(`/faculty/hackathons/${user?.id}`);
                 if (!response) throw new Error("No data");
                 setHackathons(response);
             } catch (error) {

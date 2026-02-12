@@ -107,7 +107,7 @@ const FacultyDashboard = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Hackathons</CardTitle>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/faculty/hackathons')}>
                     View All
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -149,7 +149,7 @@ const FacultyDashboard = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Events</CardTitle>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/faculty/events')}>
                     View All
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>

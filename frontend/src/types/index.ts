@@ -411,4 +411,19 @@ export interface EventTeamMember {
   assignedAt: string;
 }
 
+export interface Webinar {
+  id: string;
+  title: string;
+  description: string;
+  speaker: string;
+  startTime: string;
+  endTime: string;
+  meetingUrl?: string;
+  bannerUrl?: string;
+  category?: string;
+  collegeId?: string;
+  collegeName?: string;
+  createdAt: string;
+}
+
 export type Theme = 'light' | 'dark' | 'system';

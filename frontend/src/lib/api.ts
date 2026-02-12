@@ -42,6 +42,34 @@ export const api = {
     put: <T>(endpoint: string, body: any) => fetchAPI<T>(endpoint, { method: 'PUT', body: JSON.stringify(body) }),
     patch: <T>(endpoint: string, body: any) => fetchAPI<T>(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
     delete: <T>(endpoint: string) => fetchAPI<T>(endpoint, { method: 'DELETE' }),
+    getBlob: async (endpoint: string): Promise<Blob> => {
+        let token = null;
+        try {
+            const storageItem = localStorage.getItem('auth-storage');
+            if (storageItem) {
+                const parsed = JSON.parse(storageItem);
+                token = parsed.state?.token;
+            }
+        } catch (e) {
+            console.error('Error parsing auth token:', e);
+        }
+
+        const headers: any = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${BASE_URL}${endpoint}`, {
+            method: 'GET',
+            headers,
+        });
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        return response.blob();
+    },
 };
 
 export const clubApi = {
@@ -102,7 +130,7 @@ export const hackathonApi = {
 
 export const certificateApi = {
     getUserCertificates: (userId: string) => api.get<any[]>(`/certificates/user/${userId}`),
-    download: (id: string) => api.get<Blob>(`/certificates/${id}/download`),
+    download: (id: string) => api.getBlob(`/certificates/${id}/download`),
     verify: (number: string) => api.get<{ verified: boolean }>(`/certificates/verify/${number}`),
 };
 

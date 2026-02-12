@@ -21,7 +21,15 @@ import CollegesPage from '@/pages/CollegesPage';
 
 // Dashboard Pages
 import StudentDashboard from '@/pages/dashboard/StudentDashboard';
+import StudentHackathonDashboard from '@/pages/dashboard/StudentHackathonDashboard';
+import StudentEventsDashboard from '@/pages/dashboard/StudentEventsDashboard';
+import StudentTeamsDashboard from '@/pages/dashboard/StudentTeamsDashboard';
+import StudentAnalyticsDashboard from '@/pages/dashboard/StudentAnalyticsDashboard';
 import FacultyDashboard from '@/pages/dashboard/FacultyDashboard';
+import FacultyEventsDashboard from '@/pages/dashboard/FacultyEventsDashboard';
+import FacultyHackathonsDashboard from '@/pages/dashboard/FacultyHackathonsDashboard';
+import FacultyAnalyticsDashboard from '@/pages/dashboard/FacultyAnalyticsDashboard';
+import FacultyStudentManagement from '@/pages/dashboard/FacultyStudentManagement';
 import CollegeAdminDashboard from '@/pages/dashboard/CollegeAdminDashboard';
 import SuperAdminDashboard from '@/pages/dashboard/SuperAdminDashboard';
 import JudgeDashboard from '@/pages/dashboard/JudgeDashboard';
@@ -112,7 +120,16 @@ function App() {
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardRedirect />} />
           <Route path="/dashboard/student" element={<StudentDashboard />} />
+          <Route path="/dashboard/student/hackathons" element={<StudentHackathonDashboard />} />
+          <Route path="/dashboard/student/events" element={<StudentEventsDashboard />} />
+          <Route path="/dashboard/student/teams" element={<StudentTeamsDashboard />} />
+          <Route path="/dashboard/student/analytics" element={<StudentAnalyticsDashboard />} />
           <Route path="/dashboard/faculty" element={<FacultyDashboard />} />
+          <Route path="/dashboard/faculty/events" element={<FacultyEventsDashboard />} />
+          <Route path="/dashboard/faculty/hackathons" element={<FacultyHackathonsDashboard />} />
+          <Route path="/dashboard/faculty/analytics" element={<FacultyAnalyticsDashboard />} />
+          <Route path="/dashboard/faculty/students" element={<FacultyStudentManagement />} />
+
           <Route path="/dashboard/college-admin" element={<CollegeAdminDashboard />} />
           <Route path="/dashboard/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/dashboard/super-admin" element={<SuperAdminDashboard />} />

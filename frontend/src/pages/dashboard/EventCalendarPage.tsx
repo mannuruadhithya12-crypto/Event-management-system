@@ -32,23 +32,26 @@ import {
 } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import type { Event, Hackathon } from '@/types';
+import type { Event, Hackathon, Webinar } from '@/types';
 
 const EventCalendarPage = () => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [events, setEvents] = useState<Event[]>([]);
     const [hackathons, setHackathons] = useState<Hackathon[]>([]);
-    const [filter, setFilter] = useState<'all' | 'event' | 'hackathon'>('all');
+    const [webinars, setWebinars] = useState<Webinar[]>([]);
+    const [filter, setFilter] = useState<'all' | 'event' | 'hackathon' | 'webinar'>('all');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [eventsData, hackathonsData] = await Promise.all([
+                const [eventsData, hackathonsData, webinarsData] = await Promise.all([
                     api.get<Event[]>('/events'),
-                    api.get<Hackathon[]>('/hackathons')
+                    api.get<Hackathon[]>('/hackathons'),
+                    api.get<Webinar[]>('/webinars')
                 ]);
                 setEvents(eventsData);
                 setHackathons(hackathonsData);
+                setWebinars(webinarsData || []);
             } catch (error) {
                 console.error("Failed to fetch calendar data:", error);
             }
@@ -97,6 +100,14 @@ const EventCalendarPage = () => {
                         >
                             Hackathons
                         </Button>
+                        <Button
+                            variant={filter === 'webinar' ? 'default' : 'ghost'}
+                            size="sm"
+                            className="rounded-lg h-8"
+                            onClick={() => setFilter('webinar')}
+                        >
+                            Webinars
+                        </Button>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
@@ -141,8 +152,9 @@ const EventCalendarPage = () => {
                 formattedDate = format(day, dateFormat);
                 const cloneDay = day;
 
-                const dayEvents = filter !== 'hackathon' ? events.filter(e => isSameDay(new Date(e.startDate), cloneDay)) : [];
-                const dayHackathons = filter !== 'event' ? hackathons.filter(h => isSameDay(new Date(h.startDate), cloneDay)) : [];
+                const dayEvents = filter !== 'hackathon' && filter !== 'webinar' ? events.filter(e => isSameDay(new Date(e.startDate), cloneDay)) : [];
+                const dayHackathons = filter !== 'event' && filter !== 'webinar' ? hackathons.filter(h => isSameDay(new Date(h.startDate), cloneDay)) : [];
+                const dayWebinars = filter !== 'event' && filter !== 'hackathon' ? webinars.filter(w => isSameDay(new Date(w.startTime), cloneDay)) : [];
 
                 days.push(
                     <div
@@ -194,6 +206,23 @@ const EventCalendarPage = () => {
                                     </Tooltip>
                                 </TooltipProvider>
                             ))}
+
+                            {dayWebinars.map((w) => (
+                                <TooltipProvider key={w.id}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="flex items-center gap-1.5 truncate rounded-md bg-[hsl(var(--teal))]/10 px-2 py-1 text-[10px] font-bold text-[hsl(var(--teal))]">
+                                                <Video className="h-3 w-3 shrink-0" />
+                                                <span className="truncate">{w.title}</span>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="max-w-[200px] p-3">
+                                            <p className="font-bold">{w.title}</p>
+                                            <p className="text-xs text-slate-500 mt-1">{w.speaker}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            ))}
                         </div>
                     </div>
                 );
@@ -238,7 +267,7 @@ const EventCalendarPage = () => {
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="h-4 w-4 rounded-full bg-[hsl(var(--teal))]" />
-                            <span className="text-sm font-medium">Webinars (Coming Soon)</span>
+                            <span className="text-sm font-medium">Webinars</span>
                         </div>
                     </div>
                 </Card>
@@ -249,15 +278,30 @@ const EventCalendarPage = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="flex gap-4 overflow-x-auto pb-2">
-                            {[...hackathons, ...events].slice(0, 3).map((item, idx) => (
-                                <div key={idx} className="min-w-[200px] flex-1 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-                                    <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">
-                                        {format(new Date(item.startDate), 'MMM d, yyyy')}
-                                    </p>
-                                    <h4 className="font-bold mt-1 line-clamp-1">{item.title}</h4>
-                                    <p className="text-xs text-slate-500 mt-2">{item.collegeName}</p>
-                                </div>
-                            ))}
+                            {[...hackathons, ...events, ...webinars]
+                                .sort((a, b) => {
+                                    const dateA = 'startDate' in a ? new Date(a.startDate) : new Date((a as Webinar).startTime);
+                                    const dateB = 'startDate' in b ? new Date(b.startDate) : new Date((b as Webinar).startTime);
+                                    return dateA.getTime() - dateB.getTime();
+                                })
+                                .slice(0, 5)
+                                .map((item, idx) => {
+                                    const date = 'startDate' in item ? new Date(item.startDate) : new Date((item as Webinar).startTime);
+                                    const subtitle = 'collegeName' in item ? item.collegeName : (item as Webinar).speaker;
+
+                                    return (
+                                        <div key={idx} className="min-w-[200px] flex-1 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">
+                                                {format(date, 'MMM d, yyyy')}
+                                            </p>
+                                            <h4 className="font-bold mt-1 line-clamp-1">{item.title}</h4>
+                                            <p className="text-xs text-slate-500 mt-2">{subtitle}</p>
+                                            <Badge variant="outline" className="mt-2 text-[10px]">
+                                                {'eventType' in item ? 'Event' : 'mode' in item ? 'Hackathon' : 'Webinar'}
+                                            </Badge>
+                                        </div>
+                                    );
+                                })}
                         </div>
                     </CardContent>
                 </Card>

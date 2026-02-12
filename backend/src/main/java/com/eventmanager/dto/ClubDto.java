@@ -21,4 +21,20 @@ public class ClubDto {
     private String achievements;
     private boolean isActive;
     private LocalDateTime createdAt;
+
+    public String getCollegeId() {
+        return collegeId;
+    }
+
+    public void setCollegeId(String collegeId) {
+        this.collegeId = collegeId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

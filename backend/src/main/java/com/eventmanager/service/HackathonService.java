@@ -15,6 +15,10 @@ public interface HackathonService {
 
     List<Hackathon> getAllHackathons();
 
+    List<Hackathon> getHackathonsByStudent(String userId);
+
+    List<Hackathon> getHackathonsByOrganizer(String organizerId);
+
     // Problem Statements
     ProblemStatement addProblemStatement(String hackathonId, ProblemStatement problemStatement);
 
@@ -26,6 +30,8 @@ public interface HackathonService {
     Team joinTeam(String hackathonId, String userId, String joinCode);
 
     List<TeamMember> getTeamMembers(String teamId);
+
+    List<Team> getTeamsByStudent(String userId);
 
     Optional<Team> getTeamByUser(String hackathonId, String userId);
 

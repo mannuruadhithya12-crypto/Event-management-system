@@ -6,16 +6,24 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useAuthStore } from '@/store';
 import { api } from '@/lib/api';
 
+interface Event {
+    id: string;
+    title: string;
+    date: string;
+    participants: number;
+    status: string;
+}
+
 const FacultyEventsDashboard = () => {
     const { user } = useAuthStore();
-    const [events, setEvents] = useState([]);
+    const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 // TODO: Fetch events created by this faculty
-                const response = await api.get(`/faculty/events/${user?.id}`);
+                const response = await api.get<Event[]>(`/faculty/events/${user?.id}`);
                 if (!response) throw new Error("No data");
                 setEvents(response);
             } catch (error) {

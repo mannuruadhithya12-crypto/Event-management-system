@@ -29,6 +29,16 @@ public class HackathonController {
         return hackathonService.createHackathon(hackathon);
     }
 
+    @GetMapping("/student/{userId}")
+    public List<Hackathon> getHackathonsByStudent(@PathVariable String userId) {
+        return hackathonService.getHackathonsByStudent(userId);
+    }
+
+    @GetMapping("/organizer/{organizerId}")
+    public List<Hackathon> getHackathonsByOrganizer(@PathVariable String organizerId) {
+        return hackathonService.getHackathonsByOrganizer(organizerId);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Hackathon> getHackathonById(@PathVariable String id) {
         return hackathonService.getHackathonById(id)
@@ -62,6 +72,11 @@ public class HackathonController {
         return hackathonService.getTeamByUser(id, userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
+    }
+
+    @GetMapping("/teams/student/{userId}")
+    public List<Team> getTeamsByStudent(@PathVariable String userId) {
+        return hackathonService.getTeamsByStudent(userId);
     }
 
     @GetMapping("/teams/{teamId}/members")

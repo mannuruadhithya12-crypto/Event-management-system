@@ -81,12 +81,11 @@ const getMenuItems = (role: string) => {
         { name: 'My Hackathons', href: '/dashboard/student/hackathons', icon: Trophy },
         { name: 'My Events', href: '/dashboard/student/events', icon: Calendar },
         { name: 'My Teams', href: '/dashboard/student/teams', icon: Users },
-        { name: 'Resources', href: '/dashboard/student/resources', icon: BookOpen },
         { name: 'Webinars', href: '/dashboard/webinars', icon: Video },
         { name: 'Certificates', href: '/dashboard/student/certificates', icon: Award },
         { name: 'Calendar', href: '/dashboard/calendar', icon: Calendar },
         { name: 'Support', href: '/dashboard/support', icon: HelpCircle },
-        { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+        { name: 'Analytics', href: '/dashboard/student/analytics', icon: BarChart3 },
       ];
   }
 };

@@ -33,6 +33,14 @@ public class Club {
     private String bannerUrl;
     private String logoUrl;
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getLogoUrl() {
         return logoUrl;
     }
@@ -40,6 +48,7 @@ public class Club {
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
     }
+    
     private String category;
     private String tags;
     @Column(columnDefinition = "TEXT")
