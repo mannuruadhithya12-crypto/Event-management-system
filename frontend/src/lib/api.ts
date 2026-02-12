@@ -29,8 +29,17 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
     });
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `API Error: ${response.status}`);
+        const errorText = await response.text().catch(() => '');
+        let errorMessage = `API Error: ${response.status}`;
+
+        try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.message || errorText || errorMessage;
+        } catch (e) {
+            errorMessage = errorText || errorMessage;
+        }
+
+        throw new Error(errorMessage);
     }
 
     return response.json();

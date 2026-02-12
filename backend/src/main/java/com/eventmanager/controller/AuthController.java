@@ -27,6 +27,9 @@ public class AuthController {
     @Autowired
     org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
+    @Autowired
+    com.eventmanager.repository.CollegeRepository collegeRepository;
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -67,17 +70,16 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         user.setRole(signUpRequest.getRole());
         user.setJoinedAt(java.time.LocalDateTime.now());
-        
+
         if (signUpRequest.getDepartment() != null) {
             user.setDepartment(signUpRequest.getDepartment());
         }
-        
+
         if (signUpRequest.getYear() != null) {
             user.setYear(signUpRequest.getYear());
         }
-        
+
         if (signUpRequest.getCollegeId() != null) {
-            com.eventmanager.repository.CollegeRepository collegeRepository = context.getBean(com.eventmanager.repository.CollegeRepository.class);
             collegeRepository.findById(signUpRequest.getCollegeId()).ifPresent(user::setCollege);
         }
 
@@ -85,8 +87,4 @@ public class AuthController {
 
         return ResponseEntity.ok("User registered successfully!");
     }
-
-    @Autowired
-    private org.springframework.context.ApplicationContext context;
 }
-

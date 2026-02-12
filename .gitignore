@@ -1,0 +1,81 @@
+# Version Control
+.git/
+.gitignore
+
+# Distribution
+dist/
+.dist/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Java JDKs
+.jdk/
+jdk*/
+**/jdk/
+**/.jdk/
+
+# Java
+target/
+**/target/
+build/
+**/build/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# Maven
+mvnw
+mvnw.cmd
+.mvn/
+**/mvnw
+**/mvnw.cmd
+**/.mvn/
+
+# Gradle
+.gradle/
+**/ .gradle/
+gradlew
+gradlew.bat
+
+# Javascript / Node
+node_modules/
+**/node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+**/logs/
+**/error.log
+build_log.txt
+
+# Temp
+temp/
+tmp/
+
+# Database
+*.db
+*.mv.db
+*.trace.db
+**/data/

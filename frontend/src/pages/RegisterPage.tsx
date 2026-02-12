@@ -62,7 +62,7 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       toast.error('Please fill in all fields');
       return;
@@ -81,8 +81,8 @@ const RegisterPage = () => {
       });
       toast.success('Account created successfully!');
       navigate('/dashboard');
-    } catch (error) {
-      toast.error('Failed to create account');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create account');
     }
   };
 
@@ -140,20 +140,18 @@ const RegisterPage = () => {
               {steps.map((step, index) => (
                 <div key={step.id} className="flex items-center">
                   <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                      currentStep >= step.id
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${currentStep >= step.id
                         ? 'bg-[hsl(var(--navy))] text-white dark:bg-[hsl(var(--teal))]'
                         : 'bg-slate-200 text-slate-500 dark:bg-slate-700'
-                    }`}
+                      }`}
                   >
                     {currentStep > step.id ? <CheckCircle className="h-5 w-5" /> : step.id}
                   </div>
                   <span
-                    className={`ml-2 text-sm font-medium ${
-                      currentStep >= step.id
+                    className={`ml-2 text-sm font-medium ${currentStep >= step.id
                         ? 'text-slate-900 dark:text-white'
                         : 'text-slate-500'
-                    }`}
+                      }`}
                   >
                     {step.name}
                   </span>
@@ -180,17 +178,15 @@ const RegisterPage = () => {
                   <button
                     key={role.value}
                     onClick={() => setFormData({ ...formData, role: role.value as UserRole })}
-                    className={`flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${
-                      formData.role === role.value
+                    className={`flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${formData.role === role.value
                         ? 'border-[hsl(var(--navy))] bg-[hsl(var(--navy))]/5 dark:border-[hsl(var(--teal))] dark:bg-[hsl(var(--teal))]/5'
                         : 'border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600'
-                    }`}
+                      }`}
                   >
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${
-                      formData.role === role.value
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${formData.role === role.value
                         ? 'bg-[hsl(var(--navy))] text-white dark:bg-[hsl(var(--teal))]'
                         : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-                    }`}>
+                      }`}>
                       <role.icon className="h-6 w-6" />
                     </div>
                     <div>
@@ -429,7 +425,7 @@ const RegisterPage = () => {
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--teal))]/80 to-[hsl(var(--navy))]/80" />
-          
+
           <div className="absolute inset-0 flex flex-col justify-center px-12 text-white">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -440,7 +436,7 @@ const RegisterPage = () => {
                 Start Your Journey Today
               </h2>
               <p className="mt-4 text-lg text-white/80">
-                Join a community of innovators, creators, and leaders. 
+                Join a community of innovators, creators, and leaders.
                 Discover opportunities that will shape your future.
               </p>
 
