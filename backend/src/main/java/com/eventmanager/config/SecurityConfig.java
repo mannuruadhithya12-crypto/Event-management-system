@@ -56,8 +56,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll() // Public access to auth endpoints
                         .requestMatchers("/h2-console/**").permitAll() // Allow H2 Console
                         .requestMatchers("/error").permitAll() // Allow error endpoint
-                        .requestMatchers("/api/clubs/**").permitAll() // Public access to clubs for testing
-                        .requestMatchers("/api/events/**").permitAll() // Public access to events for testing
                         .anyRequest().authenticated() // Secure everything else
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable())); // Fix for H2 Console

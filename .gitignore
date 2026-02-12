@@ -1,0 +1,15 @@
+# General
+.DS_Store
+.vscode/
+
+# Node.js
+node_modules/
+frontend/node_modules/
+
+# Java / Maven
+target/
+backend/target/
+build_log.txt
+
+# H2 Database
+backend/data/

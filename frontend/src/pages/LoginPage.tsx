@@ -18,7 +18,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       toast.error('Please fill in all fields');
       return;
@@ -28,8 +28,8 @@ const LoginPage = () => {
       await login(formData.email, formData.password);
       toast.success('Welcome back!');
       navigate('/dashboard');
-    } catch (error) {
-      toast.error('Invalid credentials. Try demo accounts.');
+    } catch (error: any) {
+      toast.error(error.message || 'Invalid credentials. Try demo accounts.');
     }
   };
 
@@ -41,8 +41,15 @@ const LoginPage = () => {
     { email: 'judge@hackathon.com', role: 'Judge' },
   ];
 
-  const fillDemoAccount = (email: string) => {
+  const handleDemoLogin = async (email: string) => {
     setFormData({ email, password: 'password' });
+    try {
+      await login(email, 'password');
+      toast.success('Demo login successful!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || 'Demo login failed. Please try again.');
+    }
   };
 
   return (
@@ -156,7 +163,7 @@ const LoginPage = () => {
               {demoAccounts.map((account) => (
                 <button
                   key={account.email}
-                  onClick={() => fillDemoAccount(account.email)}
+                  onClick={() => handleDemoLogin(account.email)}
                   className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-[hsl(var(--navy))] hover:text-[hsl(var(--navy))] dark:border-slate-700 dark:text-slate-400"
                 >
                   {account.role}
@@ -186,7 +193,7 @@ const LoginPage = () => {
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--navy))]/80 to-[hsl(var(--teal))]/80" />
-          
+
           <div className="absolute inset-0 flex flex-col justify-center px-12 text-white">
             <motion.div
               initial={{ opacity: 0, y: 30 }}

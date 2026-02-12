@@ -22,6 +22,8 @@ public class User {
     private College college;
 
     private String department;
+
+    @Column(name = "\"year\"")
     private Integer year;
 
     @Column(columnDefinition = "TEXT")
