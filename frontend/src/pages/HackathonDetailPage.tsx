@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Calendar,
@@ -17,6 +17,10 @@ import {
   FileText,
   Award,
   MessageSquare,
+  Sparkles,
+  Zap,
+  ShieldCheck,
+  Layout
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +32,95 @@ import { hackathonApi } from '@/lib/api';
 import { useAuthStore } from '@/store';
 import TeamModule from '@/components/TeamModule';
 import SubmissionModule from '@/components/SubmissionModule';
+
+// Re-using same mock data for consistency
+const MOCK_HACKATHONS = [
+  {
+    id: 'h1',
+    title: 'Global AI Summit Hackathon',
+    description: 'Build the next generation of AI agents and automated systems using LLMs. This challenge focuses on real-world utility of autonomous agents in healthcare, legal, and educational sectors. Participants will have access to premium API credits and mentoring from top-tier AI researchers.',
+    collegeName: 'Stanford University',
+    organizerName: 'Stanford AI Lab',
+    mode: 'hybrid',
+    status: 'ongoing',
+    prizePool: 25000,
+    registeredTeams: 142,
+    bannerImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80',
+    startDate: new Date(Date.now() - 86400000 * 2),
+    endDate: new Date(Date.now() + 86400000 * 5),
+    techStack: ['Python', 'OpenAI', 'LangChain', 'Next.js'],
+    rules: [
+      'Original work only. Plagiarism leads to disqualification.',
+      'Teams must be 2-4 members.',
+      'Final submission must include a functional demo video.',
+      'Main focus should be on LLM integration.'
+    ],
+    judgingCriteria: [
+      { id: '1', name: 'Innovation', weight: 40, description: 'How unique is the approach?' },
+      { id: '2', name: 'Technical Depth', weight: 30, description: 'Correct usage of complex AI models.' },
+      { id: '3', name: 'Feasibility', weight: 30, description: 'Can this be scaled in the real world?' }
+    ],
+    problemStatements: [
+      { id: 'p1', title: 'AI for Remote Education', category: 'Education', difficulty: 'medium', description: 'Design an agent that helps students perform complex laboratory research remotely.' }
+    ]
+  },
+  {
+    id: 'h2',
+    title: 'Cyber Security Challenge 2024',
+    description: 'CTF and defensive security challenges for the brightest minds in cyber. This event tests your capability to defend critical infrastructure against sophisticated cyber attacks. Features live red-teaming scenarios and hardware security audits.',
+    collegeName: 'MIT Engineering',
+    organizerName: 'MIT Cyber Society',
+    mode: 'offline',
+    status: 'upcoming',
+    prizePool: 15000,
+    registeredTeams: 88,
+    bannerImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80',
+    startDate: new Date(Date.now() + 86400000 * 10),
+    endDate: new Date(Date.now() + 86400000 * 12),
+    techStack: ['C++', 'Security Onion', 'Wireshark', 'Metasploit'],
+    rules: [
+      'No intentional damage to provider infrastructure.',
+      'All participants must bring their own hardware.',
+      'Sharing flags with other teams is prohibited.'
+    ],
+    judgingCriteria: [
+      { id: '1', name: 'Defense Quality', weight: 50, description: 'Effectiveness of mitigation strategies.' },
+      { id: '2', name: 'Speed', weight: 30, description: 'Time taken to identify vulnerabilities.' },
+      { id: '3', name: 'Documentation', weight: 20, description: 'Quality of the incident report.' }
+    ],
+    problemStatements: [
+      { id: 'p2', title: 'Critical Grid Defense', category: 'Infrastructure', difficulty: 'hard', description: 'Protect a simulated power grid controller from external manipulation.' }
+    ]
+  },
+  {
+    id: 'h3',
+    title: 'Eco-Tech Innovation Sprint',
+    description: 'Sustainability focused hackathon to solve climate change issues through tech. We are looking for hardware or software solutions that reduce carbon footprints or enhance recycling efficiencies in urban environments.',
+    collegeName: 'University of Oxford',
+    organizerName: 'Oxford Climate Group',
+    mode: 'online',
+    status: 'upcoming',
+    prizePool: 10000,
+    registeredTeams: 215,
+    bannerImage: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&q=80',
+    startDate: new Date(Date.now() + 86400000 * 15),
+    endDate: new Date(Date.now() + 86400000 * 17),
+    techStack: ['IoT', 'Arduino', 'React', 'Firebase'],
+    rules: [
+      'Must address at least one UN Sustainability Goal.',
+      'Open source components must be properly attributed.',
+      'Maximum team size is 5.'
+    ],
+    judgingCriteria: [
+      { id: '1', name: 'Impact', weight: 50, description: 'Potential for real-world environmental change.' },
+      { id: '2', name: 'Feasibility', weight: 30, description: 'How easy is it to implement?' },
+      { id: '3', name: 'Pitch', weight: 20, description: 'Clarity of the solution presentation.' }
+    ],
+    problemStatements: [
+      { id: 'p3', title: 'Urban Waste Tracker', category: 'Logistics', difficulty: 'easy', description: 'Enable citizens to trace their recycled goods in real time.' }
+    ]
+  }
+];
 
 const HackathonDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,44 +136,55 @@ const HackathonDetailPage = () => {
       if (!id) return;
       try {
         const data = await hackathonApi.getById(id);
-        setHackathon(data);
-        if (data.resultsPublished) {
-          const res = await hackathonApi.getResults(id);
-          setResults(res);
+        if (data) {
+          setHackathon(data);
+          if (data.resultsPublished) {
+            const res = await hackathonApi.getResults(id);
+            setResults(res);
+          }
+        } else {
+          // Fallback to mock data if API returns null
+          const mock = MOCK_HACKATHONS.find(m => m.id === id);
+          if (mock) setHackathon(mock);
+          else throw new Error('Not found');
         }
       } catch (error) {
         console.error('Failed to fetch hackathon:', error);
-        toast.error('Hackathon not found');
+        // Robust mock fallback
+        const mock = MOCK_HACKATHONS.find(m => m.id === id);
+        if (mock) {
+          setHackathon(mock);
+          toast.info('Viewing preview mode (using mock data)');
+        } else {
+          toast.error('Hackathon not found');
+        }
       } finally {
-        setLoading(false);
+        setTimeout(() => setLoading(false), 800);
       }
     };
     fetchHackathon();
   }, [id]);
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center gap-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="h-12 w-12 border-4 border-[hsl(var(--teal))] border-t-transparent rounded-full"
-        />
-        <p className="text-slate-500 font-medium animate-pulse">Loading Hackathon...</p>
-      </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-white">
+      <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="h-12 w-12 border-4 border-[hsl(var(--teal))] border-t-transparent rounded-full mb-6" />
+      <p className="text-sm font-black uppercase tracking-[0.3em] text-slate-400 animate-pulse">Loading Arena Intelligence...</p>
     </div>
   );
 
   if (!hackathon) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-[hsl(var(--navy))]">Hackathon not found</h1>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
+        <div className="text-center bg-white dark:bg-slate-900 p-12 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800">
+          <ShieldCheck className="h-16 w-16 text-rose-500 mx-auto mb-6 opacity-20" />
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-6 uppercase tracking-widest">Target Lost</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-bold mb-8">This hackathon coordinate no longer exists in our database.</p>
           <Button
-            className="mt-6 h-11 rounded-xl bg-[hsl(var(--teal))] hover:bg-[hsl(var(--teal))]/90 text-white font-bold"
+            size="lg"
+            className="h-16 px-12 rounded-2xl bg-[hsl(var(--teal))] text-white font-black uppercase tracking-widest text-xs"
             onClick={() => navigate('/hackathons')}
           >
-            Back to Hackathons
+            RETURN TO LISTING
           </Button>
         </div>
       </div>
@@ -89,81 +193,84 @@ const HackathonDetailPage = () => {
 
   const handleRegister = async () => {
     if (!isAuthenticated) {
-      toast.error('Please sign in to register');
+      toast.error('Identity required. Please sign in.');
       navigate('/login');
       return;
     }
-    toast.info('Please create or join a team to participate!');
+    toast.info('To register, navigate to the Team tab and form your squad!');
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success('Link copied to clipboard!');
+    toast.success('Frequency secured. Link copied!');
   };
 
-  const registrationDeadline = hackathon.registrationDeadline ? new Date(hackathon.registrationDeadline) : null;
-  const daysUntilDeadline = registrationDeadline
-    ? Math.ceil((registrationDeadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
-
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Back Button */}
-      <div className="border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
-        <div className="mx-auto max-w-7xl">
-          <Button variant="ghost" onClick={() => navigate('/hackathons')} className="rounded-xl gap-2 hover:bg-slate-50">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Hackathons
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 overflow-x-hidden">
+      {/* Premium Header */}
+      <div className="sticky top-0 z-[100] border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl px-6 py-4">
+        <div className="mx-auto max-w-7xl flex items-center justify-between">
+          <Button variant="ghost" onClick={() => navigate('/hackathons')} className="rounded-xl gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 font-black text-xs uppercase tracking-widest flex">
+            <ArrowLeft className="h-4 w-4" /> Exit to Listing
           </Button>
+          <div className="hidden md:flex items-center gap-4">
+            <Badge className="bg-[hsl(var(--teal))]/10 text-[hsl(var(--teal))] border-none font-black px-4 py-1 rounded-lg text-[10px] uppercase tracking-widest">
+              VERIFIED EVENT
+            </Badge>
+          </div>
         </div>
       </div>
 
-      {/* Hero Section */}
-      <div className="relative h-[400px] sm:h-[450px] w-full bg-slate-900 overflow-hidden">
+      {/* Extreme Hero */}
+      <div className="relative h-[600px] w-full overflow-hidden">
         <img
           src={hackathon.bannerImage || 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80'}
           alt={hackathon.title}
-          className="h-full w-full object-cover opacity-60"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 to-transparent" />
 
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-12">
+        <div className="absolute bottom-0 left-0 right-0 px-8 pb-20">
           <div className="mx-auto max-w-7xl">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="max-w-4xl"
             >
-              <div className="flex flex-wrap items-center gap-3 mb-6">
-                <Badge className="bg-[hsl(var(--teal))] text-white px-3 py-1 rounded-lg font-bold border-none uppercase tracking-wider text-[10px]">
-                  {hackathon.mode || 'Online'}
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                <Badge className="bg-[hsl(var(--teal))] text-white px-6 py-2 rounded-2xl font-black border-none uppercase tracking-[0.2em] text-[10px] shadow-2xl">
+                  {hackathon.mode}
                 </Badge>
-                <Badge variant="outline" className="text-white border-white/20 bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg font-bold uppercase tracking-wider text-[10px]">
-                  {hackathon.status?.replace('_', ' ') || 'Upcoming'}
-                </Badge>
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl px-6 py-2 rounded-2xl border border-white/10 text-white font-black text-[10px] uppercase tracking-[0.2em]">
+                  <Sparkles className="h-3 w-3 text-yellow-400" /> {hackathon.status}
+                </div>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4 leading-tight">
+              <h1 className="text-5xl md:text-8xl font-black text-white mb-8 leading-[0.9] tracking-tighter">
                 {hackathon.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-8 text-white/90">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                    <Calendar className="h-5 w-5" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                <div className="flex items-center gap-5">
+                  <div className="h-16 w-16 rounded-[2rem] bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/10 shadow-3xl">
+                    <Calendar className="h-8 w-8 text-[hsl(var(--teal))]" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Timeline</p>
-                    <p className="font-bold">{new Date(hackathon.startDate).toLocaleDateString()} - {new Date(hackathon.endDate).toLocaleDateString()}</p>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-bold mb-1">Deployment Timeline</p>
+                    <p className="font-black text-xl text-white">
+                      {hackathon.startDate instanceof Date ? format(hackathon.startDate, 'MMM dd') : new Date(hackathon.startDate).toLocaleDateString()} - {hackathon.endDate instanceof Date ? format(hackathon.endDate, 'MMM dd') : new Date(hackathon.endDate).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                    <MapPin className="h-5 w-5" />
+                <div className="flex items-center gap-5">
+                  <div className="h-16 w-16 rounded-[2rem] bg-white/10 backdrop-blur-2xl flex items-center justify-center border border-white/10 shadow-3xl">
+                    <MapPin className="h-8 w-8 text-rose-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Location</p>
-                    <p className="font-bold">{hackathon.location || 'Virtual'}</p>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-bold mb-1">Arena Location</p>
+                    <p className="font-black text-xl text-white truncate max-w-[300px]">{hackathon.location || hackathon.collegeName}</p>
                   </div>
                 </div>
               </div>
@@ -172,254 +279,186 @@ const HackathonDetailPage = () => {
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="mx-auto max-w-7xl px-4 -mt-8 relative z-10">
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="bg-white/80 backdrop-blur-md border rounded-2xl w-full justify-start gap-2 h-16 p-2 shadow-sm mb-8 overflow-x-auto no-scrollbar">
-                <TabsTrigger value="overview" className="rounded-xl px-6 font-bold flex gap-2 data-[state=active]:bg-[hsl(var(--navy))] data-[state=active]:text-white transition-all">
-                  Overview
+      {/* Interactive Content Grid */}
+      <div className="mx-auto max-w-7xl px-8 -mt-16 relative z-10 flex flex-col lg:flex-row gap-12">
+        {/* Main Tabs Column */}
+        <div className="flex-1 min-w-0">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="bg-white/80 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] w-full justify-start gap-4 h-20 p-3 shadow-2xl mb-12 overflow-x-auto no-scrollbar backdrop-blur-xl">
+              {['Overview', 'Problems', 'Team', 'Submission', 'Rules'].map(tab => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab.toLowerCase() === 'problems' ? 'problem-statements' : tab.toLowerCase()}
+                  className="rounded-2xl h-full px-10 font-black text-xs uppercase tracking-widest data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 transition-all duration-500"
+                >
+                  {tab}
                 </TabsTrigger>
-                <TabsTrigger value="problem-statements" className="rounded-xl px-6 font-bold flex gap-2 data-[state=active]:bg-[hsl(var(--navy))] data-[state=active]:text-white transition-all">
-                  Problems
+              ))}
+              {hackathon.resultsPublished && (
+                <TabsTrigger value="results" className="rounded-2xl h-full px-10 font-black text-xs uppercase tracking-widest bg-yellow-400/20 text-yellow-600 data-[state=active]:bg-yellow-400 data-[state=active]:text-white transition-all">
+                  RESULTS LIVE
                 </TabsTrigger>
-                <TabsTrigger value="team" className="rounded-xl px-6 font-bold flex gap-2 data-[state=active]:bg-[hsl(var(--navy))] data-[state=active]:text-white transition-all">
-                  My Team
-                </TabsTrigger>
-                <TabsTrigger value="submission" className="rounded-xl px-6 font-bold flex gap-2 data-[state=active]:bg-[hsl(var(--navy))] data-[state=active]:text-white transition-all">
-                  Submission
-                </TabsTrigger>
-                <TabsTrigger value="rules" className="rounded-xl px-6 font-bold flex gap-2 data-[state=active]:bg-[hsl(var(--navy))] data-[state=active]:text-white transition-all">
-                  Rules
-                </TabsTrigger>
-                {hackathon.resultsPublished && (
-                  <TabsTrigger value="results" className="rounded-xl px-6 font-bold flex gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white animate-pulse transition-all">
-                    Results
-                  </TabsTrigger>
-                )}
-              </TabsList>
+              )}
+            </TabsList>
 
-              <TabsContent value="overview" className="outline-none">
-                <Card className="border-none shadow-sm bg-white/50 backdrop-blur-md rounded-3xl p-8">
-                  <div className="prose max-w-none dark:prose-invert">
-                    <h3 className="text-2xl font-black text-[hsl(var(--navy))] mb-6 flex items-center gap-3">
-                      <div className="h-8 w-1.5 bg-[hsl(var(--teal))] rounded-full" />
-                      About the Challenge
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed mb-8">
-                      {hackathon.description}
-                    </p>
-
-                    <h3 className="text-xl font-bold text-[hsl(var(--navy))] mb-4">Focus Technologies</h3>
-                    <div className="flex flex-wrap gap-3 mb-8">
-                      {hackathon.techStack?.map((tech: string) => (
-                        <Badge key={tech} className="bg-white text-slate-700 hover:bg-slate-50 border border-slate-100 shadow-sm px-4 py-2 rounded-xl font-bold">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-
-                    <h3 className="text-xl font-bold text-[hsl(var(--navy))] mb-4">Judging Matrix</h3>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {hackathon.judgingCriteria?.map((criterion: any) => (
-                        <div key={criterion.id} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-[hsl(var(--teal))]/30 transition-colors group">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-bold text-slate-900 group-hover:text-[hsl(var(--teal))] transition-colors">{criterion.name}</h4>
-                            <Badge className="bg-[hsl(var(--teal))] text-white border-none font-black rounded-lg">
-                              {criterion.weight}%
-                            </Badge>
+            <div className="outline-none">
+              <AnimatePresence mode="wait">
+                <TabsContent value="overview">
+                  <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+                    <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 rounded-[3rem] p-12 overflow-hidden relative">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-[hsl(var(--teal))]/5 rounded-full -mr-32 -mt-32 blur-[100px]" />
+                      <div className="prose max-w-none dark:prose-invert relative z-10">
+                        <div className="flex items-center gap-6 mb-10">
+                          <div className="h-16 w-16 bg-slate-50 dark:bg-slate-800 rounded-3xl flex items-center justify-center">
+                            <Zap className="h-8 w-8 text-[hsl(var(--teal))]" />
                           </div>
-                          <p className="text-sm text-slate-500 leading-relaxed">{criterion.description}</p>
+                          <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-none">The Mission</h3>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </Card>
-              </TabsContent>
+                        <p className="text-slate-600 dark:text-slate-400 text-xl font-medium leading-relaxed mb-12">
+                          {hackathon.description}
+                        </p>
 
-              <TabsContent value="problem-statements" className="outline-none">
-                <div className="space-y-6">
-                  {hackathon.problemStatements?.map((ps: any) => (
-                    <Card key={ps.id} className="border-none shadow-sm bg-white/50 backdrop-blur-md rounded-3xl overflow-hidden group hover:shadow-xl transition-all duration-300">
-                      <div className="p-8">
-                        <div className="flex items-start justify-between gap-4 mb-6">
-                          <div>
-                            <Badge variant="outline" className="mb-3 text-[10px] uppercase tracking-[0.2em] border-[hsl(var(--teal))]/20 text-[hsl(var(--teal))] font-black px-3 py-1 bg-[hsl(var(--teal))]/5 rounded-lg">
-                              {ps.category}
-                            </Badge>
-                            <h3 className="text-2xl font-black text-[hsl(var(--navy))] group-hover:text-[hsl(var(--teal))] transition-colors underline decoration-[hsl(var(--teal))]/10 decoration-4 underline-offset-8">
-                              {ps.title}
-                            </h3>
+                        <div className="grid md:grid-cols-2 gap-12 mt-12">
+                          <div className="space-y-6">
+                            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[hsl(var(--teal))]">Stack Deployment</h3>
+                            <div className="flex flex-wrap gap-3">
+                              {hackathon.techStack?.map((tech: string) => (
+                                <Badge key={tech} className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 shadow-sm px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest">
+                                  {tech}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                          <Badge className={cn(
-                            "rounded-xl px-4 py-1.5 font-black uppercase tracking-widest text-[10px] shadow-sm",
-                            ps.difficulty === 'easy' && 'bg-green-500 text-white',
-                            ps.difficulty === 'medium' && 'bg-yellow-500 text-white',
-                            ps.difficulty === 'hard' && 'bg-red-500 text-white',
-                          )}>
-                            {ps.difficulty}
-                          </Badge>
-                        </div>
-                        <p className="text-slate-600 leading-relaxed mb-8 text-lg">{ps.description}</p>
-                        <div className="flex items-center justify-between pt-6 border-t border-slate-100">
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <Users className="h-4 w-4" />
-                            <span className="text-xs font-bold uppercase tracking-widest">Select this track</span>
+                          <div className="space-y-6">
+                            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-rose-500">Evaluation Matrix</h3>
+                            <div className="space-y-4">
+                              {hackathon.judgingCriteria?.map((criterion: any) => (
+                                <div key={criterion.id} className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex justify-between items-center group">
+                                  <span className="font-bold text-slate-900 dark:text-white group-hover:text-[hsl(var(--teal))] transition-colors">{criterion.name}</span>
+                                  <span className="bg-[hsl(var(--teal))] text-white font-black text-[10px] px-3 py-1 rounded-lg shadow-lg">{criterion.weight}%</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <Button variant="ghost" className="rounded-xl font-black text-[hsl(var(--teal))] hover:bg-[hsl(var(--teal))]/10 gap-2">
-                            VIEW FULL BRIEF <ChevronRight className="h-4 w-4" />
-                          </Button>
                         </div>
                       </div>
                     </Card>
-                  ))}
-                  {(!hackathon.problemStatements || hackathon.problemStatements.length === 0) && (
-                    <div className="text-center py-20 bg-white/30 rounded-[40px] border-4 border-dashed border-white/40 backdrop-blur-sm">
-                      <div className="h-20 w-20 bg-white/50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                        <FileText className="h-10 w-10 text-slate-300" />
-                      </div>
-                      <p className="text-slate-500 font-bold text-xl uppercase tracking-widest">Awaiting problem release</p>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
+                  </motion.div>
+                </TabsContent>
 
-              <TabsContent value="team" className="outline-none">
-                <TeamModule hackathonId={hackathon.id} />
-              </TabsContent>
-
-              <TabsContent value="submission" className="outline-none">
-                <SubmissionModule hackathonId={hackathon.id} />
-              </TabsContent>
-
-              <TabsContent value="rules" className="outline-none">
-                <Card className="border-none bg-white/50 backdrop-blur-md rounded-[40px] p-8">
-                  <div className="space-y-4">
-                    {hackathon.rules?.map((rule: string, index: number) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-start gap-6 p-6 rounded-3xl bg-white/60 border border-white hover:border-[hsl(var(--teal))]/30 transition-all hover:translate-x-2"
-                      >
-                        <div className="h-10 w-10 rounded-2xl bg-[hsl(var(--teal))]/10 flex items-center justify-center flex-shrink-0 font-black text-[hsl(var(--teal))]">
-                          {index + 1}
-                        </div>
-                        <span className="text-slate-700 font-bold text-lg leading-relaxed">{rule}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="results" className="outline-none">
-                <div className="space-y-6">
-                  {results.sort((a, b) => a.rankPoint - b.rankPoint).map((res: any, idx) => (
-                    <motion.div
-                      key={res.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.1 }}
-                    >
-                      <Card className={cn(
-                        "border-none rounded-[40px] overflow-hidden relative",
-                        res.rankPoint === 1 ? "bg-gradient-to-br from-yellow-50 to-orange-50 shadow-xl shadow-yellow-200/20 py-8" : "bg-white/50 py-6"
-                      )}>
-                        {res.rankPoint === 1 && (
-                          <div className="absolute top-0 right-0 p-8">
-                            <Trophy className="h-12 w-12 text-yellow-500 animate-bounce" />
+                <TabsContent value="problem-statements">
+                  <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                    {hackathon.problemStatements?.map((ps: any, i: number) => (
+                      <Card key={ps.id} className="border-none shadow-2xl bg-white dark:bg-slate-900 rounded-[3rem] overflow-hidden group hover:scale-[1.02] transition-all duration-500">
+                        <div className="p-10">
+                          <div className="flex flex-col sm:flex-row items-start justify-between gap-6 mb-8">
+                            <div className="space-y-3">
+                              <Badge className="bg-[hsl(var(--teal))]/10 text-[hsl(var(--teal))] font-black px-4 py-1.5 rounded-xl text-[10px] uppercase tracking-[0.2em] border-none">
+                                Track-0{i + 1}: {ps.category}
+                              </Badge>
+                              <h3 className="text-3xl font-black text-slate-900 dark:text-white group-hover:text-[hsl(var(--teal))] transition-all">
+                                {ps.title}
+                              </h3>
+                            </div>
+                            <Badge className={cn("px-6 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest", ps.difficulty === 'hard' ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-700')}>
+                              Level: {ps.difficulty}
+                            </Badge>
                           </div>
-                        )}
-                        <CardContent className="flex items-center gap-8 px-10">
-                          <div className={cn(
-                            "h-16 w-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-sm",
-                            res.rankPoint === 1 ? "bg-yellow-400 text-white" : "bg-slate-100 text-slate-400"
-                          )}>
-                            {res.rankPoint}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-2xl font-black text-slate-900 mb-1">{res.team?.name}</h3>
-                            <p className="text-[hsl(var(--teal))] font-black uppercase tracking-widest text-xs">{res.prize}</p>
-                            {res.feedback && (
-                              <p className="text-slate-500 mt-3 text-sm italic font-medium">"{res.feedback}"</p>
-                            )}
-                          </div>
-                          <Button variant="ghost" className="rounded-xl font-black hover:bg-white/50" onClick={() => navigate(`/dashboard/clubs`)}>
-                            VIEW PROJECT
+                          <p className="text-slate-500 dark:text-slate-400 text-lg font-bold leading-relaxed mb-8">{ps.description}</p>
+                          <Button variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 font-black text-xs uppercase gap-3 group/btn">
+                            Access Technical Brief <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-2 transition-transform" />
                           </Button>
-                        </CardContent>
+                        </div>
                       </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+                    ))}
+                  </motion.div>
+                </TabsContent>
 
-          <div className="space-y-8">
-            {/* Status Card */}
-            <Card className="border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.1)] bg-white rounded-[40px] overflow-hidden">
-              <div className="p-8">
-                <div className="flex items-center justify-center h-24 w-24 rounded-[32px] bg-orange-50 mx-auto mb-8 shadow-inner">
-                  <Trophy className="h-12 w-12 text-[hsl(var(--orange))]" />
-                </div>
-                <div className="text-center mb-10">
-                  <p className="text-5xl font-black text-[hsl(var(--navy))] mb-1">${hackathon.prizePool?.toLocaleString()}</p>
-                  <p className="text-sm font-black text-[hsl(var(--teal))] uppercase tracking-[0.3em]">PRIZE POOL</p>
-                </div>
+                <TabsContent value="team">
+                  <TeamModule hackathonId={hackathon.id} />
+                </TabsContent>
 
-                <div className="space-y-6 border-t border-b border-slate-50 py-8 mb-8">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-                        <Clock className="h-5 w-5 text-slate-400" />
-                      </div>
-                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Ends In</span>
+                <TabsContent value="submission">
+                  <SubmissionModule hackathonId={hackathon.id} />
+                </TabsContent>
+
+                <TabsContent value="rules">
+                  <Card className="border-none bg-white dark:bg-slate-900 rounded-[3rem] p-12 shadow-2xl">
+                    <div className="grid gap-6">
+                      {hackathon.rules?.map((rule: string, index: number) => (
+                        <div key={index} className="flex gap-8 p-8 rounded-[2rem] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 group hover:border-[hsl(var(--teal))]/30 transition-all">
+                          <div className="h-14 w-14 rounded-[1.5rem] bg-white dark:bg-slate-700 flex items-center justify-center font-black text-2xl text-[hsl(var(--teal))] shadow-sm border border-slate-100 dark:border-slate-600">
+                            {index + 1}
+                          </div>
+                          <p className="flex-1 text-xl font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-950 dark:group-hover:text-white transition-colors">
+                            {rule}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                    <span className="text-sm font-black text-slate-900">{daysUntilDeadline} Days</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-slate-400" />
-                      </div>
-                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Team Size</span>
-                    </div>
-                    <span className="text-sm font-black text-slate-900">{hackathon.minTeamSize}-{hackathon.maxTeamSize}</span>
-                  </div>
-                </div>
+                  </Card>
+                </TabsContent>
+              </AnimatePresence>
+            </div>
+          </Tabs>
+        </div>
 
-                <div className="flex flex-col gap-4">
-                  <Button className="w-full h-16 rounded-2xl bg-[hsl(var(--teal))] hover:bg-[hsl(var(--teal))]/90 text-white font-black text-xl shadow-xl shadow-[hsl(var(--teal))]/20 transform hover:-translate-y-1 transition-all" onClick={handleRegister}>
-                    JOIN NOW
-                  </Button>
-                  <div className="flex gap-4">
-                    <Button variant="outline" className="flex-1 h-14 rounded-2xl border-2 border-slate-100 font-black gap-2 hover:bg-slate-50" onClick={handleShare}>
-                      <Share2 className="h-5 w-5" /> SHARE
-                    </Button>
-                    <Button variant="outline" className="h-14 w-14 rounded-2xl border-2 border-slate-100 flex items-center justify-center hover:bg-slate-50" onClick={() => setIsBookmarked(!isBookmarked)}>
-                      <Bookmark className={cn("h-6 w-6", isBookmarked && "fill-orange-500 text-orange-500")} />
-                    </Button>
-                  </div>
+        {/* Sidebar Area */}
+        <div className="w-full lg:w-[400px] flex flex-col gap-8">
+          <Card className="bg-slate-950 border-none rounded-[3rem] overflow-hidden shadow-3xl relative p-12 text-center group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--teal))]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+            <div className="relative z-10">
+              <div className="h-24 w-24 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 flex items-center justify-center mx-auto mb-10 shadow-3xl">
+                <Trophy className="h-12 w-12 text-[hsl(var(--teal))] transition-transform group-hover:scale-125" />
+              </div>
+              <div className="space-y-2 mb-12">
+                <p className="text-6xl font-black text-white leading-none">${hackathon.prizePool?.toLocaleString()}</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Total Bounty Pool</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-12">
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/5 space-y-1">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Registrants</p>
+                  <p className="text-2xl font-black text-white">{hackathon.registeredTeams}</p>
+                </div>
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/5 space-y-1">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Mode</p>
+                  <p className="text-2xl font-black text-white uppercase">{hackathon.mode}</p>
                 </div>
               </div>
-            </Card>
 
-            {/* Organizer Info */}
-            <Card className="border-none shadow-sm bg-white/50 backdrop-blur-md rounded-[32px] p-4">
-              <div className="flex items-center gap-5 p-4 rounded-2xl bg-white/80 border border-white">
-                <div className="h-16 w-16 rounded-[20px] bg-[hsl(var(--navy))] text-white flex items-center justify-center shadow-lg font-black text-2xl">
-                  {hackathon.organizerName?.charAt(0)}
+              <Button className="w-full h-20 rounded-[1.5rem] bg-[hsl(var(--teal))] text-white font-black text-xl shadow-2xl shadow-[hsl(var(--teal))]/20 hover:scale-[1.03] transition-all" onClick={handleRegister}>
+                INITIATE REGISTRATION
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="bg-white dark:bg-slate-900 border-none rounded-[3rem] p-10 shadow-2xl space-y-8">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Network & Coordination</h4>
+            <div className="space-y-4">
+              <Button variant="outline" className="w-full h-16 rounded-2xl justify-between px-8 border-slate-100 dark:border-slate-800 font-black text-xs uppercase tracking-widest group" onClick={handleShare}>
+                <div className="flex items-center gap-4">
+                  <Share2 className="h-5 w-5 text-indigo-500" /> Secure Protocol Link
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-black text-[hsl(var(--teal))] uppercase tracking-[0.2em] mb-1">Organized By</p>
-                  <p className="font-black text-[hsl(var(--navy))] truncate text-lg leading-none">{hackathon.organizerName}</p>
-                  <p className="text-xs font-bold text-slate-400 truncate mt-1">{hackathon.collegeName}</p>
+                <ChevronRight className="h-4 w-4 group-hover:translate-x-2 transition-transform" />
+              </Button>
+              <Button variant="outline" className="w-full h-16 rounded-2xl justify-between px-8 border-slate-100 dark:border-slate-800 font-black text-xs uppercase tracking-widest group" onClick={() => setIsBookmarked(!isBookmarked)}>
+                <div className="flex items-center gap-4">
+                  <Bookmark className={cn("h-5 w-5", isBookmarked ? "text-orange-500 fill-orange-500" : "text-orange-400")} /> Archive Challenge
                 </div>
-              </div>
-            </Card>
+                <ChevronRight className="h-4 w-4 group-hover:translate-x-2 transition-transform" />
+              </Button>
+            </div>
+          </Card>
+
+          <div className="bg-slate-900 dark:bg-white p-2 rounded-[2.5rem] flex items-center gap-6 shadow-2xl">
+            <div className="h-16 w-16 rounded-[1.8rem] bg-white/10 dark:bg-slate-900/10 flex items-center justify-center font-black text-2xl text-white dark:text-slate-900">
+              {hackathon.organizerName?.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0 pr-4">
+              <p className="text-xs font-black text-[hsl(var(--teal))] uppercase tracking-widest mb-1">Controller</p>
+              <p className="font-black text-white dark:text-slate-900 truncate text-lg uppercase leading-none">{hackathon.organizerName}</p>
+            </div>
           </div>
         </div>
       </div>

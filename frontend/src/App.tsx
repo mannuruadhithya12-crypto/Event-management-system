@@ -21,7 +21,9 @@ import CollegesPage from '@/pages/CollegesPage';
 
 // Dashboard Pages
 import StudentDashboard from '@/pages/dashboard/StudentDashboard';
-import StudentHackathonDashboard from '@/pages/dashboard/StudentHackathonDashboard';
+import StudentHackathonDashboard from '@/pages/dashboard/StudentHackathonDashboard'; // Kept for reference but unused in new route
+import MyHackathonsPage from '@/pages/dashboard/MyHackathonsPage';
+import StudentHackathonDetailPage from '@/pages/dashboard/HackathonDetailPage';
 import StudentEventsDashboard from '@/pages/dashboard/StudentEventsDashboard';
 import StudentTeamsDashboard from '@/pages/dashboard/StudentTeamsDashboard';
 import StudentAnalyticsDashboard from '@/pages/dashboard/StudentAnalyticsDashboard';
@@ -120,10 +122,12 @@ function App() {
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardRedirect />} />
           <Route path="/dashboard/student" element={<StudentDashboard />} />
-          <Route path="/dashboard/student/hackathons" element={<StudentHackathonDashboard />} />
+          <Route path="/dashboard/student/my-hackathons" element={<MyHackathonsPage />} />
+          <Route path="/dashboard/student/my-hackathons/:id" element={<StudentHackathonDetailPage />} />
           <Route path="/dashboard/student/events" element={<StudentEventsDashboard />} />
           <Route path="/dashboard/student/teams" element={<StudentTeamsDashboard />} />
           <Route path="/dashboard/student/analytics" element={<StudentAnalyticsDashboard />} />
+          <Route path="/dashboard/student/resources" element={<ResourcesPage />} />
           <Route path="/dashboard/faculty" element={<FacultyDashboard />} />
           <Route path="/dashboard/faculty/events" element={<FacultyEventsDashboard />} />
           <Route path="/dashboard/faculty/hackathons" element={<FacultyHackathonsDashboard />} />
@@ -136,8 +140,8 @@ function App() {
           <Route path="/dashboard/judge" element={<JudgeDashboard />} />
 
           {/* Club Routes */}
-          <Route path="/dashboard/clubs" element={<ClubsPage />} />
-          <Route path="/dashboard/clubs/:id" element={<ClubDetailPage />} />
+          <Route path="/dashboard/student/clubs" element={<ClubsPage />} />
+          <Route path="/dashboard/student/clubs/:id/*" element={<ClubDetailPage />} />
 
           {/* New Ecosystem Routes */}
           <Route path="/dashboard/forum" element={<ForumPage />} />

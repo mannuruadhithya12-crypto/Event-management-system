@@ -89,6 +89,12 @@ export const clubApi = {
     getJoinRequests: (id: string) => api.get<any[]>(`/clubs/${id}/join-requests`),
     updateJoinRequestStatus: (requestId: string, status: string) =>
         api.put<any>(`/clubs/join-requests/${requestId}/status?status=${status}`, {}),
+    getEvents: (id: string) => api.get<any[]>(`/clubs/${id}/events`),
+    getHackathons: (id: string) => api.get<any[]>(`/clubs/${id}/hackathons`),
+    getResources: (id: string) => api.get<any[]>(`/clubs/${id}/resources`),
+    getDiscussions: (id: string) => api.get<any[]>(`/clubs/${id}/discussions`),
+    createDiscussion: (clubId: string, data: { authorId: string; title: string; content: string }) => api.post<any>(`/clubs/${clubId}/discussions`, data),
+    getAnalytics: (id: string) => api.get<any>(`/clubs/${id}/analytics`),
 };
 
 export const eventTeamApi = {
@@ -126,6 +132,8 @@ export const hackathonApi = {
     getMyTeam: (id: string, userId: string) => api.get<any>(`/hackathons/${id}/my-team?userId=${userId}`),
     getTeamMembers: (teamId: string) => api.get<any[]>(`/hackathons/teams/${teamId}/members`),
     getResults: (id: string) => api.get<any[]>(`/hackathons/${id}/results`),
+    getRegistered: (userId: string) => api.get<any[]>(`/student/hackathons/registered?userId=${userId}`),
+    getCompleted: (userId: string) => api.get<any[]>(`/student/hackathons/completed?userId=${userId}`),
 };
 
 export const certificateApi = {
@@ -149,9 +157,10 @@ export const chatApi = {
 export const forumApi = {
     getPosts: () => api.get<any[]>('/forum/posts'),
     getPost: (id: string) => api.get<any>(`/forum/posts/${id}`),
-    createPost: (authorId: string, title: string, content: string, category: string) => api.post<any>(`/forum/posts?authorId=${authorId}&title=${encodeURIComponent(title)}&category=${encodeURIComponent(category)}`, content),
+    createPost: (authorId: string, title: string, content: string, category: string) => api.post<any>('/forum/posts', { authorId, title, content, category }),
     upvotePost: (id: string) => api.post<any>(`/forum/posts/${id}/upvote`, {}),
-    addComment: (id: string, authorId: string, content: string) => api.post<any>(`/forum/posts/${id}/comments?authorId=${authorId}`, content),
+    downvotePost: (id: string) => api.post<any>(`/forum/posts/${id}/downvote`, {}),
+    addComment: (id: string, authorId: string, content: string) => api.post<any>(`/forum/posts/${id}/comments`, { authorId, content }),
     getComments: (id: string) => api.get<any[]>(`/forum/posts/${id}/comments`),
 };
 

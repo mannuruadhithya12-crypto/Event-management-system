@@ -75,10 +75,10 @@ const getMenuItems = (role: string) => {
     default:
       return [
         { name: 'Overview', href: '/dashboard/student', icon: LayoutDashboard },
-        { name: 'Clubs', href: '/dashboard/clubs', icon: Users },
+        { name: 'Clubs', href: '/dashboard/student/clubs', icon: Users },
         { name: 'Forum', href: '/dashboard/forum', icon: Globe },
         { name: 'Community', href: '/dashboard/community', icon: MessageSquare },
-        { name: 'My Hackathons', href: '/dashboard/student/hackathons', icon: Trophy },
+        { name: 'My Hackathons', href: '/dashboard/student/my-hackathons', icon: Trophy },
         { name: 'My Events', href: '/dashboard/student/events', icon: Calendar },
         { name: 'My Teams', href: '/dashboard/student/teams', icon: Users },
         { name: 'Webinars', href: '/dashboard/webinars', icon: Video },

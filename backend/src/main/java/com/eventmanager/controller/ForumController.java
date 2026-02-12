@@ -16,9 +16,8 @@ public class ForumController {
     private ForumService forumService;
 
     @PostMapping("/posts")
-    public ResponseEntity<ForumPost> createPost(@RequestParam String authorId, @RequestParam String title,
-            @RequestBody String content, @RequestParam String category) {
-        return ResponseEntity.ok(forumService.createPost(authorId, title, content, category));
+    public ResponseEntity<ForumPost> createPost(@RequestBody com.eventmanager.dto.ForumPostRequest request) {
+        return ResponseEntity.ok(forumService.createPost(request.getAuthorId(), request.getTitle(), request.getContent(), request.getCategory()));
     }
 
     @GetMapping("/posts")
@@ -41,10 +40,14 @@ public class ForumController {
         return ResponseEntity.ok(forumService.upvotePost(id));
     }
 
+    @PostMapping("/posts/{id}/downvote")
+    public ResponseEntity<ForumPost> downvotePost(@PathVariable String id) {
+        return ResponseEntity.ok(forumService.downvotePost(id));
+    }
+
     @PostMapping("/posts/{id}/comments")
-    public ResponseEntity<ForumComment> addComment(@PathVariable String id, @RequestParam String authorId,
-            @RequestBody String content) {
-        return ResponseEntity.ok(forumService.addComment(id, authorId, content));
+    public ResponseEntity<ForumComment> addComment(@PathVariable String id, @RequestBody com.eventmanager.dto.ForumCommentRequest request) {
+        return ResponseEntity.ok(forumService.addComment(id, request.getAuthorId(), request.getContent()));
     }
 
     @GetMapping("/posts/{id}/comments")
