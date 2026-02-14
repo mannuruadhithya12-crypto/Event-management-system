@@ -90,7 +90,7 @@ const EventCalendarPage = () => {
         const dayEvents = [
             ...events.filter(e => isSameDay(new Date(e.startDate), day)).map(e => ({ ...e, type: 'event' })),
             ...hackathons.filter(h => isSameDay(new Date(h.startDate), day)).map(h => ({ ...h, type: 'hackathon' })),
-            ...webinars.filter(w => isSameDay(new Date(w.startTime), day)).map(w => ({ ...w, type: 'webinar' }))
+            ...webinars.filter(w => isSameDay(new Date(w.startDate), day)).map(w => ({ ...w, type: 'webinar' }))
         ];
 
         if (dayEvents.length > 0) {
@@ -187,7 +187,7 @@ const EventCalendarPage = () => {
 
                 const dayEvents = filter !== 'hackathon' && filter !== 'webinar' ? events.filter(e => isSameDay(new Date(e.startDate), cloneDay)) : [];
                 const dayHackathons = filter !== 'event' && filter !== 'webinar' ? hackathons.filter(h => isSameDay(new Date(h.startDate), cloneDay)) : [];
-                const dayWebinars = filter !== 'event' && filter !== 'hackathon' ? webinars.filter(w => isSameDay(new Date(w.startTime), cloneDay)) : [];
+                const dayWebinars = filter !== 'event' && filter !== 'hackathon' ? webinars.filter(w => isSameDay(new Date(w.startDate), cloneDay)) : [];
 
                 const hasContent = dayEvents.length > 0 || dayHackathons.length > 0 || dayWebinars.length > 0;
 
@@ -285,7 +285,7 @@ const EventCalendarPage = () => {
                                     <h4 className="font-bold">{item.title}</h4>
                                     <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                                         <Clock className="h-3 w-3" />
-                                        {format(new Date(item.startDate || item.startTime), 'h:mm a')}
+                                        {format(new Date(item.startDate), 'h:mm a')}
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                                         <MapPin className="h-3 w-3" />

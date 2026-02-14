@@ -8,6 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.lowagie.text.Document;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Font;
+import com.lowagie.text.Element;
+import com.lowagie.text.pdf.PdfWriter;
+import java.io.ByteArrayOutputStream;
+import java.awt.Color;
 
 @Service
 @Transactional
@@ -292,5 +299,111 @@ public class WebinarServiceImpl implements WebinarService {
         dto.setCertificateGenerated(r.getCertificateGenerated());
         dto.setRegisteredAt(r.getRegisteredAt());
         return dto;
+    }
+
+    @Override
+    public String generateCertificate(String userId, String webinarId) {
+        Webinar webinar = webinarRepository.findById(webinarId)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        User student = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        WebinarRegistration reg = registrationRepository.findByWebinarAndStudent(webinar, student)
+                .orElseThrow(() -> new RuntimeException("Registration not found"));
+
+        if (!"COMPLETED".equals(webinar.getStatus())) {
+            throw new RuntimeException("Certificate can only be generated for completed webinars");
+        }
+        
+        // Mark as generated
+        reg.setCertificateGenerated(true);
+        // In a real app, this might point to a storage URL (S3). 
+        // Here we point to the download endpoint.
+        String downloadUrl = "/api/webinars/" + webinarId + "/certificate/download?userId=" + userId;
+        reg.setCertificateUrl(downloadUrl);
+        registrationRepository.save(reg);
+        
+        return downloadUrl;
+    }
+
+    @Override
+    public byte[] downloadCertificate(String userId, String webinarId) {
+        Webinar webinar = webinarRepository.findById(webinarId)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        User student = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Ensure registration exists
+        registrationRepository.findByWebinarAndStudent(webinar, student)
+                .orElseThrow(() -> new RuntimeException("Registration not found"));
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Document document = new Document();
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            Font titleFont = new Font(Font.HELVETICA, 24, Font.BOLD, Color.BLUE);
+            Font contentFont = new Font(Font.HELVETICA, 16, Font.NORMAL, Color.BLACK);
+
+            Paragraph title = new Paragraph("CERTIFICATE OF COMPLETION", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(20);
+            document.add(title);
+
+            Paragraph subtitle = new Paragraph("This is to certify that", contentFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(10);
+            document.add(subtitle);
+
+            Paragraph name = new Paragraph(student.getName(), new Font(Font.HELVETICA, 20, Font.BOLD, Color.BLACK));
+            name.setAlignment(Element.ALIGN_CENTER);
+            name.setSpacingAfter(20);
+            document.add(name);
+
+            Paragraph text = new Paragraph("Has successfully attended the webinar on", contentFont);
+            text.setAlignment(Element.ALIGN_CENTER);
+            document.add(text);
+
+            Paragraph webinarTitle = new Paragraph(webinar.getTitle(), new Font(Font.HELVETICA, 18, Font.BOLD, Color.DARK_GRAY));
+            webinarTitle.setAlignment(Element.ALIGN_CENTER);
+            webinarTitle.setSpacingBefore(10);
+            webinarTitle.setSpacingAfter(10);
+            document.add(webinarTitle);
+            
+            Paragraph date = new Paragraph("Conducted on " + webinar.getStartDate().toLocalDate(), contentFont);
+            date.setAlignment(Element.ALIGN_CENTER);
+            document.add(date);
+
+            Paragraph speaker = new Paragraph("Speaker: " + webinar.getSpeakerName(), contentFont);
+            speaker.setAlignment(Element.ALIGN_CENTER);
+            speaker.setSpacingBefore(20);
+            document.add(speaker);
+
+            document.close();
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate PDF", e);
+        }
+    }
+
+    @Override
+    public String joinWebinar(String userId, String webinarId) {
+        Webinar webinar = webinarRepository.findById(webinarId)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        User student = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        WebinarRegistration reg = registrationRepository.findByWebinarAndStudent(webinar, student)
+                .orElseThrow(() -> new RuntimeException("Registration not found"));
+
+        // Update attendance
+        if (!"PRESENT".equals(reg.getAttendanceStatus())) {
+            reg.setAttendanceStatus("PRESENT");
+            registrationRepository.save(reg);
+            
+            activityService.logActivity(userId, "WEBINAR_JOINED", "Joined webinar: " + webinar.getTitle(), webinarId, webinar.getTitle());
+        }
+        
+        return webinar.getMeetingLink();
     }
 }

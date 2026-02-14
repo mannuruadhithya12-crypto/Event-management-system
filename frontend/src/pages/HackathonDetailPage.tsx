@@ -41,10 +41,14 @@ const HackathonDetailPage = () => {
 
   useEffect(() => {
     if (hackathon?.registrationDeadline) {
+      const deadlineDate = new Date(hackathon.registrationDeadline);
+      if (isNaN(deadlineDate.getTime())) {
+        setTimeLeft("TBD");
+        return;
+      }
       const timer = setInterval(() => {
         const now = new Date().getTime();
-        const deadline = new Date(hackathon.registrationDeadline).getTime();
-        const distance = deadline - now;
+        const distance = deadlineDate.getTime() - now;
 
         if (distance < 0) {
           setTimeLeft("Registration Closed");
@@ -57,6 +61,8 @@ const HackathonDetailPage = () => {
         }
       }, 1000);
       return () => clearInterval(timer);
+    } else if (hackathon) {
+      setTimeLeft("TBD");
     }
   }, [hackathon]);
 

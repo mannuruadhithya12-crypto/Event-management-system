@@ -1,4 +1,4 @@
-import { Webinar, WebinarRegistration } from '../types';
+import type { Webinar, WebinarRegistration } from '@/types';
 
 const BASE_URL = '/api'; // Relative path to use proxy
 
@@ -120,9 +120,11 @@ export const webinarApi = {
     cancel: (id: string) => api.post<void>(`/webinars/${id}/cancel`, {}),
     delete: (id: string) => api.delete<void>(`/webinars/${id}/delete`),
     register: (id: string, userId: string) => api.post<void>(`/webinars/${id}/register?userId=${userId}`, {}),
+    join: (id: string, userId: string) => api.post<{ url: string }>(`/webinars/${id}/join?userId=${userId}`, {}),
     getMyRegistrations: (userId: string) => api.get<WebinarRegistration[]>(`/webinars/student/my?userId=${userId}`),
     submitFeedback: (id: string, userId: string, data: { rating: number; comment: string }) =>
         api.post<void>(`/webinars/${id}/feedback?userId=${userId}`, data),
+    generateCertificate: (id: string, userId: string) => api.post<{ url: string }>(`/webinars/${id}/certificate?userId=${userId}`, {}),
     getAnalytics: () => api.get<any>('/webinars/analytics'),
     seed: () => api.post<any>('/webinars/seed', {}),
 };
@@ -206,6 +208,7 @@ export const complaintApi = {
 
 export const feedbackApi = {
     submit: (data: { eventId: string; userId: string; rating: number; comment: string; suggestions?: string }) => api.post<any>('/feedback/event', data),
+    getByEvent: (eventId: string) => api.get<any[]>(`/feedback/event/${eventId}`),
 };
 
 export const studentTeamApi = {

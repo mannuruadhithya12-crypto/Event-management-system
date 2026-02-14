@@ -165,11 +165,11 @@ const StudentDashboard = () => {
                         </span>
                         <span className="flex items-center gap-1">
                           <Trophy className="h-3 w-3" />
-                          ${(hackathon.prizePool || 0).toLocaleString()}
+                          {hackathon.prizePool || 'TBA'}
                         </span>
                       </div>
                     </div>
-                    <Badge variant="outline">{hackathon.status.replace('_', ' ')}</Badge>
+                    <Badge variant="outline">{(hackathon.status || 'UPCOMING').replace('_', ' ')}</Badge>
                   </div>
                 ))}
               </div>
@@ -262,7 +262,7 @@ const StudentDashboard = () => {
                         <span className="capitalize">{event.mode}</span>
                       </div>
                     </div>
-                    <Badge variant="outline" className="capitalize">{event.eventType.replace('_', ' ')}</Badge>
+                    <Badge variant="outline" className="capitalize">{(event.eventType || 'EVENT').replace('_', ' ')}</Badge>
                   </div>
                 ))}
               </div>

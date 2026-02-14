@@ -22,6 +22,7 @@ public class WebinarRegistration {
 
     private String attendanceStatus = "ABSENT"; // PRESENT, ABSENT
     private Boolean certificateGenerated = false;
+    private String certificateUrl;
     private LocalDateTime registeredAt = LocalDateTime.now();
 
     public String getId() { return id; }

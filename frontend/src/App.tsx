@@ -18,6 +18,9 @@ import HackathonRegistrationPage from '@/pages/HackathonRegistrationPage';
 import EventsPage from '@/pages/EventsPage';
 import EventDetailPage from '@/pages/EventDetailPage';
 import ResourcesPage from '@/pages/ResourcesPage';
+import WebinarsPage from '@/pages/dashboard/WebinarsPage';
+import AdminWebinarsPage from '@/pages/dashboard/AdminWebinarsPage';
+import CreateWebinarPage from '@/pages/dashboard/CreateWebinarPage';
 import LeaderboardPage from '@/pages/LeaderboardPage';
 import CollegesPage from '@/pages/CollegesPage';
 
@@ -43,7 +46,6 @@ import ForumPage from '@/pages/dashboard/ForumPage';
 import CommunityChatPage from '@/pages/dashboard/CommunityChatPage';
 import AnalyticsDashboard from '@/pages/dashboard/AnalyticsDashboard';
 import CertificationCenter from '@/pages/dashboard/CertificationCenter';
-import WebinarsPage from '@/pages/dashboard/WebinarsPage';
 import WebinarDetailPage from '@/pages/dashboard/WebinarDetailPage';
 import EventCalendarPage from '@/pages/dashboard/EventCalendarPage';
 import SupportCenter from '@/pages/dashboard/SupportCenter';
@@ -131,6 +133,9 @@ function App() {
           <Route path="/dashboard/student/teams" element={<StudentTeamsDashboard />} />
           <Route path="/dashboard/student/team/:id" element={<TeamDetailsPage />} />
           <Route path="/dashboard/student/analytics" element={<StudentAnalyticsDashboard />} />
+          <Route path="/dashboard/student/webinars" element={<WebinarsPage />} />
+          <Route path="/dashboard/student/webinars/my" element={<WebinarsPage />} />
+          <Route path="/dashboard/student/webinars/:id" element={<WebinarsPage />} />
           <Route path="/dashboard/student/resources" element={<ResourcesPage />} />
           <Route path="/dashboard/student/certificates" element={<CertificationCenter />} />
           <Route path="/dashboard/student/leaderboard" element={<LeaderboardPage />} />
@@ -142,6 +147,9 @@ function App() {
           <Route path="/dashboard/faculty/students" element={<FacultyStudentManagement />} />
 
           <Route path="/dashboard/college-admin" element={<CollegeAdminDashboard />} />
+          <Route path="/dashboard/college-admin/webinars" element={<AdminWebinarsPage />} />
+          <Route path="/dashboard/college-admin/webinars/create" element={<CreateWebinarPage />} />
+          <Route path="/dashboard/college-admin/webinars/edit/:id" element={<CreateWebinarPage />} />
           <Route path="/dashboard/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/dashboard/judge" element={<JudgeDashboard />} />
 

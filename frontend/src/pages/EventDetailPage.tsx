@@ -63,7 +63,8 @@ const EventDetailPage = () => {
 
     setIsSubmitting(true);
     try {
-      await feedbackApi.submit(id!, {
+      await feedbackApi.submit({
+        eventId: id!,
         userId: user!.id,
         rating,
         comment

@@ -20,4 +20,8 @@ public interface WebinarService {
     
     Map<String, Object> getAnalytics();
     void seedWebinars();
+    
+    String generateCertificate(String userId, String webinarId);
+    byte[] downloadCertificate(String userId, String webinarId);
+    String joinWebinar(String userId, String webinarId);
 }

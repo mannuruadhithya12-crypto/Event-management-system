@@ -50,22 +50,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configure(http))
+                .cors(org.springframework.security.config.Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Public access to auth endpoints
-                        .requestMatchers("/h2-console/**").permitAll() // Allow H2 Console
-                        .requestMatchers("/error").permitAll() // Allow error endpoint
-                        .requestMatchers("/api/clubs/**").permitAll() // Public access to clubs for testing
-                        .requestMatchers("/api/events/**").permitAll() // Public access to events for testing
-                        .requestMatchers("/api/forum/**").permitAll() // Public access to forum for testing
-                        .requestMatchers("/api/student/**").permitAll() // Public access to student teams for testing
-                        .requestMatchers("/api/hackathons/**").permitAll() // Public access to hackathons for testing
-                        .requestMatchers("/api/webinars/**").permitAll() // Public access to webinars for testing
-
-                        .anyRequest().authenticated() // Secure everything else
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/clubs/**").permitAll()
+                        .requestMatchers("/api/events/**").permitAll()
+                        .requestMatchers("/api/forum/**").permitAll()
+                        .requestMatchers("/api/student/**").permitAll()
+                        .requestMatchers("/api/hackathons/**").permitAll()
+                        .requestMatchers("/api/webinars/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())); // Fix for H2 Console
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

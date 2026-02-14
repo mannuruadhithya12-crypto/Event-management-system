@@ -31,7 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
@@ -354,10 +354,10 @@ const HackathonsTab = () => {
                         { id: 'u1', name: 'You', role: 'Leader', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You' },
                         ...selectedMembers.map(id => {
                             const user = MOCK_STUDENTS.find(s => s.id === id);
-                            return { ...user, role: 'Member' };
+                            return { id: user?.id || id, name: user?.name || 'Unknown', role: 'Member', avatar: user?.avatar || '' };
                         })
                     ]
-                };
+                } as any;
             }
             return h;
         });
@@ -608,8 +608,8 @@ const ResourcesTab = () => (
                 <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${res.type === 'PDF' ? 'bg-red-100 text-red-600' :
-                                res.type === 'Video' ? 'bg-blue-100 text-blue-600' :
-                                    'bg-green-100 text-green-600'
+                            res.type === 'Video' ? 'bg-blue-100 text-blue-600' :
+                                'bg-green-100 text-green-600'
                             }`}>
                             {res.type === 'PDF' ? <FileText className="h-5 w-5" /> :
                                 res.type === 'Video' ? <Video className="h-5 w-5" /> :
@@ -717,8 +717,8 @@ const CalendarTab = () => {
                                 <DialogTrigger asChild>
                                     <div
                                         className={`h-12 rounded-xl flex items-center justify-center text-sm relative font-medium transition-all cursor-pointer hover:shadow-md ${isEvent
-                                                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-900'
-                                                : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
+                                            ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-900'
+                                            : 'bg-white border border-slate-100 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
                                             }`}
                                         onClick={() => isEvent && setSelectedDate(i + 1)}
                                     >

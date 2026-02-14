@@ -1,189 +1,367 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Video,
-    Calendar,
-    User,
-    ChevronLeft,
-    Clock,
-    Globe,
-    ShieldCheck,
-    Share2,
-    Play,
-    MessageSquare
+    Calendar, Clock, MapPin, Users, Video,
+    User, Share2, Award, MessageSquare,
+    CheckCircle, AlertCircle, ArrowLeft
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { webinarApi } from '@/lib/api';
+import type { Webinar } from '@/types';
+import { useAuthStore } from '@/store';
+import { toast } from 'sonner';
 
-const WebinarDetailPage = () => {
-    const { id } = useParams<{ id: string }>();
+export default function WebinarDetailPage() {
+    const { id } = useParams();
     const navigate = useNavigate();
-    const [webinar, setWebinar] = useState<any>(null);
+    const { user } = useAuthStore();
+
+    const [webinar, setWebinar] = useState<Webinar | null>(null);
     const [loading, setLoading] = useState(true);
+    const [registering, setRegistering] = useState(false);
+    const [feedbackOpen, setFeedbackOpen] = useState(false);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState('');
 
     useEffect(() => {
-        if (!id) return;
-        const fetchWebinar = async () => {
-            try {
-                const data = await webinarApi.getById(id);
-                setWebinar(data);
-            } catch (error) {
-                console.error("Failed to fetch webinar:", error);
-                // Mock behavior
-                setWebinar({
-                    id,
-                    title: 'Mastering Full-Stack Development in 2024',
-                    description: 'Learn the core technologies driving the web today. We will cover React, Node.js, and modern DevOps practices.',
-                    speaker: 'Dr. Sarah Mitchell',
-                    startTime: new Date(Date.now() + 86400000).toISOString(),
-                    endTime: new Date(Date.now() + 90000000).toISOString(),
-                    category: 'Technology',
-                    meetingUrl: 'https://zoom.us/j/example',
-                    bannerUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1200'
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchWebinar();
-    }, [id]);
+        if (id) {
+            fetchWebinarDetails();
+        }
+    }, [id, user]);
 
-    if (loading) return <div className="p-8 text-center">Loading webinar details...</div>;
-    if (!webinar) return <div className="p-8 text-center">Webinar not found.</div>;
+    const fetchWebinarDetails = async () => {
+        try {
+            setLoading(true);
+            if (!id) return;
+            const data = await webinarApi.getById(id, user?.id);
+            setWebinar(data);
+        } catch (error) {
+            console.error('Error fetching webinar:', error);
+            toast.error('Failed to load webinar details');
+            navigate('/dashboard/student/webinars');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const isUpcoming = new Date(webinar.startTime) > new Date();
+    const handleRegister = async () => {
+        if (!webinar || !user) return;
+
+        try {
+            setRegistering(true);
+            await webinarApi.register(webinar.id, user.id);
+            toast.success('Successfully registered for webinar!');
+            setWebinar({ ...webinar, isRegistered: true, registeredCount: webinar.registeredCount + 1 });
+        } catch (error) {
+            console.error('Registration failed:', error);
+            toast.error('Failed to register. Please try again.');
+        } finally {
+            setRegistering(false);
+        }
+    };
+
+    const handleCancelRegistration = async () => {
+        if (!webinar || !user) return;
+
+        // In a real app, we might want a confirmation dialog here
+        if (!window.confirm('Are you sure you want to cancel your registration?')) return;
+
+        try {
+            setRegistering(true);
+            // Assuming we have a cancel endpoint in API, user ID might be needed or handled by token
+            // For now, let's assume register endpoint toggles or we use a separate one if available
+            // The API definition has a cancel endpoint but it takes webinar ID. 
+            // Often cancel registration is specific. 
+            // Let's check api.ts: cancel: (id: string) => api.post<void>(`/webinars/${id}/cancel`, {}),
+            // This looks like CANCEL WEBINAR (admin) not cancel registration.
+            // The requirement didn't explicitly ask for student cancel registration, but let's see.
+            // If not available, we can skip or implement later. 
+            // I'll skip "Cancel Registration" for student for now to avoid using the Admin "Cancel Webinar" endpoint by mistake.
+            toast.error('Cancellation feature coming soon');
+        } catch (error) {
+            toast.error('Failed to cancel registration');
+        } finally {
+            setRegistering(false);
+        }
+    };
+
+    const handleSubmitFeedback = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!webinar || !user) return;
+
+        try {
+            setRegistering(true);
+            await webinarApi.submitFeedback(webinar.id, user.id, { rating, comment });
+            toast.success('Feedback submitted successfully!');
+            setFeedbackOpen(false);
+        } catch (error) {
+            console.error('Feedback failed:', error);
+            toast.error('Failed to submit feedback');
+        } finally {
+            setRegistering(false);
+        }
+    };
+
+    const handleJoin = async () => {
+        if (!webinar || !user) return;
+        try {
+            const { url } = await webinarApi.join(webinar.id, user.id);
+            window.open(url, '_blank');
+        } catch (error) {
+            console.error('Failed to join:', error);
+            toast.error('Failed to join webinar');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
+    if (!webinar) return null;
+
+    const isUpcoming = webinar.status === 'UPCOMING';
+    const isOngoing = webinar.status === 'ONGOING';
+    const isCompleted = webinar.status === 'COMPLETED';
 
     return (
-        <div className="space-y-6">
-            <Button variant="ghost" className="gap-2 pl-0" onClick={() => navigate('/dashboard/webinars')}>
-                <ChevronLeft className="h-4 w-4" />
+        <div className="space-y-8 max-w-7xl mx-auto">
+            {/* Back Button */}
+            <button
+                onClick={() => navigate('/dashboard/student/webinars')}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+                <ArrowLeft className="w-4 h-4" />
                 Back to Webinars
-            </Button>
+            </button>
 
-            <div className="grid gap-8 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Visual Card */}
-                    <Card className="overflow-hidden border-none shadow-xl">
-                        <div className="relative h-80 w-full overflow-hidden">
-                            <img src={webinar.bannerUrl} alt={webinar.title} className="h-full w-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                            <div className="absolute bottom-8 left-8 right-8">
-                                <Badge className="mb-4 bg-white/20 backdrop-blur-md text-white border-white/30">
-                                    {webinar.category}
-                                </Badge>
-                                <h1 className="text-3xl font-bold text-white leading-tight">
-                                    {webinar.title}
-                                </h1>
-                            </div>
-                        </div>
-                        <CardContent className="p-8">
-                            <h3 className="text-lg font-semibold mb-4">About this session</h3>
-                            <p className="text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-line">
-                                {webinar.description}
-                            </p>
-
-                            <div className="mt-8 grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Speaker</p>
-                                    <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4 text-[hsl(var(--navy))] dark:text-[hsl(var(--teal))]" />
-                                        <span className="font-semibold">{webinar.speaker}</span>
-                                    </div>
-                                </div>
-                                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Duration</p>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-[hsl(var(--orange))]" />
-                                        <span className="font-semibold">90 minutes</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <MessageSquare className="h-5 w-5" />
-                                Live Q&A and Chat
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="h-48 flex items-center justify-center text-slate-400 border-2 border-dashed rounded-lg">
-                                <p>The chat will be available once the session starts.</p>
-                            </div>
-                        </CardContent>
-                    </Card>
+            {/* Hero Section */}
+            <div className="relative rounded-3xl overflow-hidden bg-slate-800 border border-slate-700/50">
+                <div className="absolute inset-0">
+                    <img
+                        src={webinar.bannerImage || 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?w=800'}
+                        alt={webinar.title}
+                        className="w-full h-full object-cover opacity-30"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" />
                 </div>
 
-                <div className="space-y-6">
-                    <Card className="glass-card">
-                        <CardHeader>
-                            <CardTitle>Session Details</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <Calendar className="h-5 w-5 text-slate-400" />
-                                <div>
-                                    <p className="text-sm font-medium">Date</p>
-                                    <p className="text-sm text-slate-500">{new Date(webinar.startTime).toLocaleDateString()}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Clock className="h-5 w-5 text-slate-400" />
-                                <div>
-                                    <p className="text-sm font-medium">Time</p>
-                                    <p className="text-sm text-slate-500">{new Date(webinar.startTime).toLocaleTimeString()}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Globe className="h-5 w-5 text-slate-400" />
-                                <div>
-                                    <p className="text-sm font-medium">Platform</p>
-                                    <p className="text-sm text-slate-500">Zoom Marketplace</p>
-                                </div>
-                            </div>
+                <div className="relative p-8 md:p-12 space-y-6">
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${isUpcoming ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                            isOngoing ? 'bg-green-500/20 text-green-400 border-green-500/30 animate-pulse' :
+                                'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                            }`}>
+                            {webinar.status}
+                        </span>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                            {webinar.mode}
+                        </span>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                            {webinar.hostCollege}
+                        </span>
+                    </div>
 
-                            <div className="pt-4 space-y-3">
-                                <Button className="w-full gap-2 bg-[hsl(var(--navy))] text-white dark:bg-[hsl(var(--teal))]" disabled={!isUpcoming}>
-                                    {isUpcoming ? (
-                                        <>
-                                            <Play className="h-4 w-4" />
-                                            Join Now
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Play className="h-4 w-4" />
-                                            View Recording
-                                        </>
-                                    )}
-                                </Button>
-                                <Button variant="outline" className="w-full gap-2">
-                                    <Share2 className="h-4 w-4" />
-                                    Share with Peers
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white max-w-4xl">
+                        {webinar.title}
+                    </h1>
 
-                    <Card className="bg-[hsl(var(--orange))]/5 border-[hsl(var(--orange))]/20">
-                        <CardContent className="p-6">
-                            <div className="flex items-center gap-3 mb-3">
-                                <ShieldCheck className="h-6 w-6 text-[hsl(var(--orange))]" />
-                                <h4 className="font-bold text-[hsl(var(--orange))]">Certificate of Completion</h4>
-                            </div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                                Attend at least 80% of the session to receive an official digital certificate verifiable on your profile.
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <div className="flex flex-wrap gap-6 text-gray-300">
+                        <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-700/50">
+                            <Calendar className="w-5 h-5 text-blue-400" />
+                            <span>{new Date(webinar.startDate).toDateString()}</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-700/50">
+                            <Clock className="w-5 h-5 text-blue-400" />
+                            <span>{new Date(webinar.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-700/50">
+                            {webinar.mode === 'Online' ? <Video className="w-5 h-5 text-green-400" /> : <MapPin className="w-5 h-5 text-red-400" />}
+                            <span>{webinar.mode === 'Online' ? 'Zoom / Meet' : 'Main Auditorium'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-700/50">
+                            <Users className="w-5 h-5 text-yellow-400" />
+                            <span>{webinar.registeredCount} Registered</span>
+                        </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-4 pt-6">
+                        {webinar.isRegistered ? (
+                            <>
+                                <div className="flex items-center gap-2 px-6 py-3 bg-green-500/20 text-green-400 rounded-xl border border-green-500/30 font-medium">
+                                    <CheckCircle className="w-5 h-5" />
+                                    Registered
+                                </div>
+
+                                {isOngoing && webinar.meetingLink && (
+                                    <button
+                                        onClick={handleJoin}
+                                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg shadow-blue-500/25 transition-all font-medium"
+                                    >
+                                        <Video className="w-5 h-5" />
+                                        Join Now
+                                    </button>
+                                )}
+
+                                {isCompleted && (
+                                    <button
+                                        onClick={() => setFeedbackOpen(true)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all font-medium border border-slate-600"
+                                    >
+                                        <MessageSquare className="w-5 h-5 text-yellow-400" />
+                                        Give Feedback
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            isUpcoming && (
+                                <button
+                                    onClick={handleRegister}
+                                    disabled={registering}
+                                    className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 transition-all font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                                >
+                                    {registering ? 'Registering...' : 'Register for Free'}
+                                </button>
+                            )
+                        )}
+
+                        <button className="p-3 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-xl transition-colors border border-slate-700">
+                            <Share2 className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column - Main Info */}
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+                        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                            <AlertCircle className="w-6 h-6 text-blue-400" />
+                            About this Webinar
+                        </h2>
+                        <p className="text-gray-300 leading-relaxed text-lg">
+                            {webinar.description}
+                        </p>
+                    </div>
+
+                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+                        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                            <User className="w-6 h-6 text-purple-400" />
+                            Meet the Speaker
+                        </h2>
+                        <div className="flex flex-col md:flex-row gap-6 items-start">
+                            <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-700 flex-shrink-0 border-2 border-purple-500/30">
+                                <img
+                                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${webinar.speakerName}`}
+                                    alt={webinar.speakerName}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-2">{webinar.speakerName}</h3>
+                                <p className="text-gray-300 leading-relaxed">
+                                    {webinar.speakerBio || `Expert speaker with deep knowledge in ${webinar.title}. Bringing industry insights and practical experience to help students excel.`}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column - Sidebar */}
+                <div className="space-y-6">
+                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+                        <h3 className="text-lg font-bold text-white mb-4">What you'll learn</h3>
+                        <ul className="space-y-3">
+                            {['Industry Trends', 'Practical Skills', 'Q&A Session', 'Networking', 'Certificate of Completion'].map((item, i) => (
+                                <li key={i} className="flex items-center gap-3 text-gray-300">
+                                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                    {item}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 p-6 rounded-2xl border border-yellow-500/20">
+                        <div className="flex items-center gap-3 mb-3">
+                            <Award className="w-6 h-6 text-yellow-400" />
+                            <h3 className="text-lg font-bold text-yellow-100">Earn a Certificate</h3>
+                        </div>
+                        <p className="text-yellow-200/80 text-sm">
+                            Complete this webinar and submit feedback to receive a verified certificate for your portfolio.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Feedback Modal */}
+            <AnimatePresence>
+                {feedbackOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-slate-800 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-6">
+                                <h3 className="text-2xl font-bold text-white mb-2">Rate this Webinar</h3>
+                                <p className="text-gray-400 mb-6">How was your experience with {webinar.speakerName}?</p>
+
+                                <form onSubmit={handleSubmitFeedback} className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">Rating</label>
+                                        <div className="flex gap-2">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button
+                                                    key={star}
+                                                    type="button"
+                                                    onClick={() => setRating(star)}
+                                                    className={`p-2 rounded-lg transition-colors ${rating >= star ? 'text-yellow-400 bg-yellow-400/10' : 'text-gray-600 bg-slate-700'}`}
+                                                >
+                                                    <Award className="w-6 h-6" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">Comments</label>
+                                        <textarea
+                                            value={comment}
+                                            onChange={(e) => setComment(e.target.value)}
+                                            className="w-full h-32 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500 resize-none"
+                                            placeholder="Share your thoughts..."
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 text-sm font-medium">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFeedbackOpen(false)}
+                                            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={registering}
+                                            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            {registering ? 'Submitting...' : 'Submit Feedback'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
-};
-
-export default WebinarDetailPage;
+}

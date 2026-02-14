@@ -73,9 +73,30 @@ public class WebinarController {
         return webinarService.getAnalytics();
     }
 
+    @PostMapping("/{id}/certificate")
+    public ResponseEntity<?> generateCertificate(@PathVariable String id, @RequestParam String userId) {
+        String url = webinarService.generateCertificate(userId, id);
+        return ResponseEntity.ok(Map.of("message", "Certificate generated successfully", "url", url));
+    }
+
+    @GetMapping("/{id}/certificate/download")
+    public ResponseEntity<byte[]> downloadCertificate(@PathVariable String id, @RequestParam String userId) {
+        byte[] pdfBytes = webinarService.downloadCertificate(userId, id);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=certificate.pdf")
+                .header("Content-Type", "application/pdf")
+                .body(pdfBytes);
+    }
+
+    @PostMapping("/{id}/join")
+    public ResponseEntity<?> joinWebinar(@PathVariable String id, @RequestParam String userId) {
+        String meetingLink = webinarService.joinWebinar(userId, id);
+        return ResponseEntity.ok(Map.of("message", "Joined successfully", "url", meetingLink));
+    }
+
     @PostMapping("/seed")
     public ResponseEntity<?> seed() {
         webinarService.seedWebinars();
-        return ResponseEntity.ok(Map.of("message", "Webinars seeded successfully"));
+        return ResponseEntity.ok(Map.of("message", "Seeded 25 webinars"));
     }
 }

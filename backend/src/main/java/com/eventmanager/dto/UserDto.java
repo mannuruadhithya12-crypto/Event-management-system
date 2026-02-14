@@ -13,4 +13,6 @@ public class UserDto {
     private String collegeId;
     private String collegeName;
     private LocalDateTime joinedAt;
+    private Integer points;
+    private Integer streak;
 }

@@ -47,6 +47,8 @@ public class AuthController {
         userDto.setRole(user.getRole());
         userDto.setAvatar(user.getAvatar());
         userDto.setJoinedAt(user.getJoinedAt());
+        userDto.setPoints(user.getPoints());
+        userDto.setStreak(user.getStreak());
 
         if (user.getCollege() != null) {
             userDto.setCollegeId(user.getCollege().getId());
