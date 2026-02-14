@@ -415,15 +415,33 @@ export interface Webinar {
   id: string;
   title: string;
   description: string;
-  speaker: string;
-  startTime: string;
-  endTime: string;
-  meetingUrl?: string;
-  bannerUrl?: string;
-  category?: string;
-  collegeId?: string;
-  collegeName?: string;
+  speakerName: string;
+  speakerBio: string;
+  hostCollege: string;
+  mode: 'Online' | 'Offline' | 'Hybrid';
+  meetingLink?: string;
+  startDate: string;
+  endDate: string;
+  duration: number;
+  maxParticipants: number;
+  registeredCount: number;
+  bannerImage?: string;
+  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+  createdBy: string;
   createdAt: string;
+  isRegistered?: boolean;
+}
+
+export interface WebinarRegistration {
+  id: string;
+  webinarId: string;
+  webinarTitle: string;
+  speakerName: string;
+  startDate: string;
+  status: string;
+  attendanceStatus: string;
+  certificateGenerated: boolean;
+  registeredAt: string;
 }
 
 export type Theme = 'light' | 'dark' | 'system';

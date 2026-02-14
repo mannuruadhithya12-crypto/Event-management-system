@@ -1,3 +1,4 @@
+import { Webinar, WebinarRegistration } from '../types';
 
 const BASE_URL = '/api'; // Relative path to use proxy
 
@@ -112,10 +113,18 @@ export const eventTeamApi = {
     removeMember: (eventId: string, userId: string) => api.delete<any>(`/events/${eventId}/team/${userId}`),
 };
 export const webinarApi = {
-    getAll: () => api.get<any[]>('/webinars'),
-    getById: (id: string) => api.get<any>(`/webinars/${id}`),
-    create: (data: any) => api.post<any>('/webinars', data),
-    getByCollege: (collegeId: string) => api.get<any[]>(`/webinars/college/${collegeId}`),
+    getAll: (userId?: string) => api.get<Webinar[]>(`/webinars${userId ? `?userId=${userId}` : ''}`),
+    getById: (id: string, userId?: string) => api.get<Webinar>(`/webinars/${id}${userId ? `?userId=${userId}` : ''}`),
+    create: (userId: string, data: any) => api.post<Webinar>(`/webinars/create?userId=${userId}`, data),
+    update: (id: string, data: any) => api.put<Webinar>(`/webinars/${id}/update`, data),
+    cancel: (id: string) => api.post<void>(`/webinars/${id}/cancel`, {}),
+    delete: (id: string) => api.delete<void>(`/webinars/${id}/delete`),
+    register: (id: string, userId: string) => api.post<void>(`/webinars/${id}/register?userId=${userId}`, {}),
+    getMyRegistrations: (userId: string) => api.get<WebinarRegistration[]>(`/webinars/student/my?userId=${userId}`),
+    submitFeedback: (id: string, userId: string, data: { rating: number; comment: string }) =>
+        api.post<void>(`/webinars/${id}/feedback?userId=${userId}`, data),
+    getAnalytics: () => api.get<any>('/webinars/analytics'),
+    seed: () => api.post<any>('/webinars/seed', {}),
 };
 
 export const analyticsApi = {
@@ -141,8 +150,18 @@ export const hackathonApi = {
     getMyTeam: (id: string, userId: string) => api.get<any>(`/hackathons/${id}/my-team?userId=${userId}`),
     getTeamMembers: (teamId: string) => api.get<any[]>(`/hackathons/teams/${teamId}/members`),
     getResults: (id: string) => api.get<any[]>(`/hackathons/${id}/results`),
-    getRegistered: (userId: string) => api.get<any[]>(`/student/hackathons/registered?userId=${userId}`),
-    getCompleted: (userId: string) => api.get<any[]>(`/student/hackathons/completed?userId=${userId}`),
+    getRegistered: (userId: string) => api.get<any[]>(`/hackathons/student/${userId}/registered`),
+    getCompleted: (userId: string) => api.get<any[]>(`/hackathons/student/${userId}/completed`),
+    getRecommendations: (userId: string) => api.get<any[]>(`/hackathons/recommendations/${userId}`),
+
+    // New Endpoints
+    filter: (params: any) => {
+        const query = new URLSearchParams(params).toString();
+        return api.get<any[]>(`/hackathons/filter?${query}`);
+    },
+    bookmark: (id: string, userId: string) => api.post<any>(`/hackathons/${id}/bookmark?userId=${userId}`, {}),
+    getBookmarks: (userId: string) => api.get<any[]>(`/hackathons/bookmarks?userId=${userId}`),
+    seed: () => api.post<any>('/hackathons/seed', {}),
 };
 
 export const certificateApi = {
@@ -186,7 +205,18 @@ export const complaintApi = {
 };
 
 export const feedbackApi = {
-    submit: (eventId: string, data: { userId: string; rating: number; comment: string; suggestions?: string }) => api.post<any>(`/feedback/events/${eventId}`, data),
-    getByEvent: (eventId: string) => api.get<any[]>(`/feedback/events/${eventId}`),
-    getAverage: (eventId: string) => api.get<number>(`/feedback/events/${eventId}/average`),
+    submit: (data: { eventId: string; userId: string; rating: number; comment: string; suggestions?: string }) => api.post<any>('/feedback/event', data),
+};
+
+export const studentTeamApi = {
+    getMyTeams: (userId: string) => api.get<any[]>(`/student/teams?userId=${userId}`),
+    getTeam: (id: string) => api.get<any>(`/student/team/${id}`),
+    createTeam: (userId: string, data: any) => api.post<any>(`/student/team/create?userId=${userId}`, data),
+    getInvites: (userId: string) => api.get<any[]>(`/student/team/invites?userId=${userId}`),
+    inviteMember: (id: string, email: string) => api.post<any>(`/student/team/${id}/invite`, { email }),
+    acceptInvite: (id: string, userId: string) => api.post<any>(`/student/team/${id}/accept?userId=${userId}`, {}),
+    leaveTeam: (id: string, userId: string) => api.post<any>(`/student/team/${id}/leave?userId=${userId}`, {}),
+    submitProject: (id: string, data: any) => api.post<any>(`/student/team/${id}/submit`, data),
+    chat: (id: string, userId: string, content: string, type: string = 'TEXT') =>
+        api.post<any>(`/student/team/${id}/chat?userId=${userId}`, { content, type }),
 };

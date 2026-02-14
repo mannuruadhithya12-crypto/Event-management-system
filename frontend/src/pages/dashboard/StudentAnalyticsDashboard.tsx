@@ -208,7 +208,7 @@ const StudentAnalyticsDashboard = () => {
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        {stats.clubParticipation.map((entry: any, index: number) => (
+                                        {(stats.clubParticipation || []).map((entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
@@ -219,7 +219,7 @@ const StudentAnalyticsDashboard = () => {
                             </ResponsiveContainer>
                         </div>
                         <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-4">
-                            {stats.clubParticipation.map((entry: any, index: number) => (
+                            {(stats.clubParticipation || []).map((entry: any, index: number) => (
                                 <div key={entry.name} className="flex items-center gap-1">
                                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                                     {entry.name}
@@ -239,7 +239,7 @@ const StudentAnalyticsDashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {stats.upcomingCommitments.map((item: any) => (
+                            {(stats.upcomingCommitments || []).map((item: any) => (
                                 <div key={item.id} className="flex items-center p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border-l-4 border-indigo-200 dark:border-indigo-900">
                                     <div className="flex-1 space-y-1">
                                         <p className="text-sm font-medium leading-none">{item.title}</p>

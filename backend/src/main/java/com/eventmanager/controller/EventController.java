@@ -68,12 +68,69 @@ public class EventController {
         return ResponseEntity.ok("Registered successfully");
     }
 
-    // Get events registered by student
+    // Get events registered by student with DTO
     @GetMapping("/student/{userId}")
-    public List<Event> getEventsByStudent(@PathVariable String userId) {
+    public List<com.eventmanager.dto.EventDto> getEventsByStudent(@PathVariable String userId) {
         return eventRegistrationRepository.findByUserId(userId).stream()
-            .map(EventRegistration::getEvent)
+            .map(reg -> {
+                com.eventmanager.dto.EventDto dto = new com.eventmanager.dto.EventDto();
+                Event event = reg.getEvent();
+                dto.setId(event.getId());
+                dto.setTitle(event.getTitle());
+                dto.setDescription(event.getDescription());
+                dto.setBannerImage(event.getBannerImage());
+                dto.setMode(event.getMode());
+                dto.setLocation(event.getLocation());
+                dto.setStartDate(event.getStartDate());
+                dto.setEndDate(event.getEndDate());
+                dto.setStatus(event.getStatus()); // Event status
+                dto.setRegistrationStatus(reg.getStatus()); // User specific status
+                dto.setCertificateIssued(reg.getCertificateIssued());
+                if (event.getOrganizer() != null) dto.setOrganizerName(event.getOrganizer().getName());
+                if (event.getCollege() != null) dto.setCollegeName(event.getCollege().getName());
+                dto.setRegisteredCount(event.getRegisteredCount());
+                dto.setCapacity(event.getCapacity());
+                return dto;
+            })
             .collect(Collectors.toList());
+    }
+
+    @PostMapping("/{eventId}/unregister")
+    public ResponseEntity<?> unregisterFromEvent(@PathVariable String eventId, @RequestParam String userId) {
+        EventRegistration registration = eventRegistrationRepository.findByEventId(eventId).stream()
+            .filter(r -> r.getUser().getId().equals(userId))
+            .findFirst()
+            .orElse(null);
+
+        if (registration == null) {
+            return ResponseEntity.badRequest().body("Not registered");
+        }
+        
+        // Logic to allow/disallow based on time can go here
+        
+        registration.setStatus("CANCELLED");
+        eventRegistrationRepository.save(registration);
+        
+        Event event = registration.getEvent();
+        event.setRegisteredCount(event.getRegisteredCount() - 1);
+        eventRepository.save(event);
+
+        return ResponseEntity.ok("Unregistered successfully");
+    }
+
+    @PostMapping("/{eventId}/attendance")
+    public ResponseEntity<?> markAttendance(@PathVariable String eventId, @RequestParam String userId) {
+        EventRegistration registration = eventRegistrationRepository.findByEventId(eventId).stream()
+            .filter(r -> r.getUser().getId().equals(userId))
+            .findFirst()
+            .orElse(null);
+
+        if (registration == null) return ResponseEntity.badRequest().body("Not registered");
+
+        registration.setStatus("ATTENDED");
+        eventRegistrationRepository.save(registration);
+        
+        return ResponseEntity.ok("Attendance marked");
     }
 
     // Get events organized by faculty

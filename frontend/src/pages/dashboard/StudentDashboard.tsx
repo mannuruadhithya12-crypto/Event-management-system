@@ -161,11 +161,11 @@ const StudentDashboard = () => {
                       <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {new Date(hackathon.startDate).toLocaleDateString()}
+                          {hackathon.startDate ? new Date(hackathon.startDate).toLocaleDateString() : 'TBD'}
                         </span>
                         <span className="flex items-center gap-1">
                           <Trophy className="h-3 w-3" />
-                          ${hackathon.prizePool.toLocaleString()}
+                          ${(hackathon.prizePool || 0).toLocaleString()}
                         </span>
                       </div>
                     </div>
@@ -245,10 +245,10 @@ const StudentDashboard = () => {
                   >
                     <div className="flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-blue-500/10">
                       <span className="text-xs font-medium text-blue-500 uppercase">
-                        {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short' })}
+                        {event.startDate ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short' }) : 'TBD'}
                       </span>
                       <span className="text-xl font-bold text-blue-500">
-                        {new Date(event.startDate).getDate()}
+                        {event.startDate ? new Date(event.startDate).getDate() : '--'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
@@ -257,7 +257,7 @@ const StudentDashboard = () => {
                       <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {event.startDate ? new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}
                         </span>
                         <span className="capitalize">{event.mode}</span>
                       </div>

@@ -152,97 +152,79 @@ const SubmissionModule: React.FC<SubmissionModuleProps> = ({ hackathonId }) => {
     }
 
     return (
-        <div className="space-y-8">
-            <Card className="border-none shadow-sm bg-white/50 backdrop-blur-sm rounded-3xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        {submission ? 'Update Submission' : 'Submit Your Project'}
+        <div className="space-y-10">
+            <Card className="border-none shadow-3xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl rounded-[3rem] p-12 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-[hsl(var(--teal))]/10 rounded-full -mr-40 -mt-40 blur-[100px] transition-all group-hover:bg-[hsl(var(--teal))]/20" />
+
+                <CardHeader className="px-0 pt-0 pb-12 relative z-10">
+                    <CardTitle className="text-4xl font-black text-slate-900 dark:text-white flex items-center gap-4">
+                        <Upload className="h-10 w-10 text-[hsl(var(--teal))]" />
+                        {submission ? 'UPDATE PROJECT CORE' : 'INITIALIZE SUBMISSION'}
                     </CardTitle>
-                    <CardDescription>
-                        {submission ? 'You can update your submission until the deadline.' : 'Provide details about your hackathon project.'}
+                    <CardDescription className="text-lg font-medium text-slate-500 mt-2">
+                        {submission ? 'Synchronize your latest deployment and documentation.' : 'Transmit your project artifacts to the evaluation grid.'}
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid gap-6 md:grid-cols-2">
+
+                <CardContent className="px-0 space-y-10 relative z-10">
+                    <div className="grid gap-8 md:grid-cols-2">
                         <div className="space-y-4 md:col-span-2">
-                            <label className="text-sm font-bold ml-1">Project Title*</label>
+                            <label className="text-xs font-black text-[hsl(var(--teal))] uppercase tracking-[0.3em] ml-1">Project Identifier</label>
                             <Input
-                                placeholder="Your project name"
-                                className="rounded-xl h-12"
+                                placeholder="THE PROJECT NAME"
+                                className="rounded-[1.5rem] h-16 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 font-extrabold text-lg px-8 focus:border-[hsl(var(--teal))] transition-all"
                                 value={form.projectTitle}
                                 onChange={e => setForm({ ...form, projectTitle: e.target.value })}
                             />
                         </div>
                         <div className="space-y-4 md:col-span-2">
-                            <label className="text-sm font-bold ml-1">Description*</label>
+                            <label className="text-xs font-black text-[hsl(var(--teal))] uppercase tracking-[0.3em] ml-1">Functional Briefing</label>
                             <Textarea
-                                placeholder="What does your project do? What technologies did you use?"
-                                className="rounded-2xl min-h-[120px] resize-none"
+                                placeholder="Elaborate on the technical architecture and core value proposition..."
+                                className="rounded-[2rem] min-h-[200px] bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 font-bold text-lg p-8 focus:border-[hsl(var(--teal))] transition-all resize-none"
                                 value={form.description}
                                 onChange={e => setForm({ ...form, description: e.target.value })}
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="text-sm font-bold ml-1 flex items-center gap-2">
-                                <Github className="h-4 w-4" /> Github Repository URL
+                            <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                <Github className="h-4 w-4" /> REPOSITORY ARCHIVE
                             </label>
                             <Input
-                                placeholder="https://github.com/..."
-                                className="rounded-xl h-11"
+                                placeholder="HTTPS://GITHUB.COM/..."
+                                className="rounded-2xl h-14 bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 font-bold px-6"
                                 value={form.githubUrl}
                                 onChange={e => setForm({ ...form, githubUrl: e.target.value })}
                             />
                         </div>
                         <div className="space-y-4">
-                            <label className="text-sm font-bold ml-1 flex items-center gap-2">
-                                <ExternalLink className="h-4 w-4" /> Live Demo URL
+                            <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                <ExternalLink className="h-4 w-4" /> LIVE DEPLOYMENT
                             </label>
                             <Input
-                                placeholder="https://..."
-                                className="rounded-xl h-11"
+                                placeholder="HTTPS://APP-DEMO.COM"
+                                className="rounded-2xl h-14 bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 font-bold px-6"
                                 value={form.demoUrl}
                                 onChange={e => setForm({ ...form, demoUrl: e.target.value })}
                             />
                         </div>
-                        <div className="space-y-4">
-                            <label className="text-sm font-bold ml-1 flex items-center gap-2">
-                                <Video className="h-4 w-4" /> Video Demo URL
-                            </label>
-                            <Input
-                                placeholder="YouTube/Loom link"
-                                className="rounded-xl h-11"
-                                value={form.videoUrl}
-                                onChange={e => setForm({ ...form, videoUrl: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-4">
-                            <label className="text-sm font-bold ml-1 flex items-center gap-2">
-                                <FileText className="h-4 w-4" /> Presentation URL
-                            </label>
-                            <Input
-                                placeholder="Drive/Canva link"
-                                className="rounded-xl h-11"
-                                value={form.presentationUrl}
-                                onChange={e => setForm({ ...form, presentationUrl: e.target.value })}
-                            />
-                        </div>
                     </div>
 
-                    <div className="pt-4">
+                    <div className="pt-8">
                         <Button
-                            className="w-full h-14 rounded-2xl bg-[hsl(var(--navy))] hover:bg-[hsl(var(--navy))]/90 text-white font-bold text-lg gap-2"
+                            className="w-full h-20 rounded-[1.5rem] bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-black text-xl gap-4 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl"
                             onClick={handleSubmit}
                             disabled={submitting}
                         >
                             {submitting ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <Loader2 className="h-6 w-6 animate-spin" />
                             ) : (
-                                <Send className="h-5 w-5" />
+                                <Send className="h-6 w-6" />
                             )}
-                            {submission ? 'Update Submission' : 'Submit Project'}
+                            {submission ? 'PUSH UPDATED BUILD' : 'COMMIT SUBMISSION'}
                         </Button>
-                        <p className="text-center text-xs text-slate-400 mt-4">
-                            By submitting, you agree to the hackathon's <span className="underline cursor-pointer">Rules & Guidelines</span>.
+                        <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mt-8">
+                            BY COMMITTING, YOU VERIFY ALL WORK IS ORIGINAL AND COMPLIES WITH SECURITY PROTOCOLS.
                         </p>
                     </div>
                 </CardContent>

@@ -207,8 +207,8 @@ const ForumPage = () => {
     };
 
     const filteredPosts = posts.filter(post => {
-        const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            post.content.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = (post.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (post.content || '').toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
@@ -404,7 +404,7 @@ const ForumPage = () => {
                                                                 </Badge>
                                                                 <span className="flex items-center gap-1 text-xs text-slate-400">
                                                                     <Clock className="h-3 w-3" />
-                                                                    {formatDistanceToNow(new Date(post.createdAt))} ago
+                                                                    {post.createdAt ? formatDistanceToNow(new Date(post.createdAt)) : 'Just now'} ago
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -515,7 +515,7 @@ const ForumPage = () => {
                                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                                     <div className="flex items-center gap-3 mb-4">
                                         <Badge>{selectedPost.category}</Badge>
-                                        <span className="text-xs text-slate-500">{formatDistanceToNow(new Date(selectedPost.createdAt))} ago</span>
+                                        <span className="text-xs text-slate-500">{selectedPost.createdAt ? formatDistanceToNow(new Date(selectedPost.createdAt)) : 'Just now'} ago</span>
                                     </div>
                                     <h2 className="text-2xl font-bold mb-4">{selectedPost.title}</h2>
                                     <div className="flex items-center gap-3 mb-6">
@@ -550,7 +550,7 @@ const ForumPage = () => {
                                                     <div className="flex-1 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl rounded-tl-none">
                                                         <div className="flex items-center justify-between mb-2">
                                                             <span className="font-semibold text-sm">{comment.author?.name}</span>
-                                                            <span className="text-xs text-slate-400">{formatDistanceToNow(new Date(comment.createdAt))} ago</span>
+                                                            <span className="text-xs text-slate-400">{comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt)) : 'Just now'} ago</span>
                                                         </div>
                                                         <p className="text-sm text-slate-600 dark:text-slate-300">{comment.content}</p>
                                                     </div>

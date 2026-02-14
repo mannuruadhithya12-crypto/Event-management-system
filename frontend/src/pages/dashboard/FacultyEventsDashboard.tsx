@@ -62,13 +62,13 @@ const FacultyEventsDashboard = () => {
                     <Card key={event.id}>
                         <CardHeader>
                             <CardTitle>{event.title}</CardTitle>
-                            <CardDescription>{event.date}</CardDescription>
+                            <CardDescription>{event.date || 'TBD'}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="flex justify-between items-center mb-4">
-                                <span className="text-sm font-medium">{event.participants} Participants</span>
+                                <span className="text-sm font-medium">{event.participants || 0} Participants</span>
                                 <span className={`px-2 py-1 rounded text-xs ${event.status === 'Upcoming' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100'}`}>
-                                    {event.status}
+                                    {event.status || 'Draft'}
                                 </span>
                             </div>
                             <div className="flex space-x-2">

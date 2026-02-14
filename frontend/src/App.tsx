@@ -9,10 +9,12 @@ import DashboardLayout from '@/layouts/DashboardLayout';
 
 // Pages
 import LandingPage from '@/pages/LandingPage';
+import CollegeAdminDashboard from '@/pages/dashboard/CollegeAdminDashboard';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import HackathonsPage from '@/pages/HackathonsPage';
 import HackathonDetailPage from '@/pages/HackathonDetailPage';
+import HackathonRegistrationPage from '@/pages/HackathonRegistrationPage';
 import EventsPage from '@/pages/EventsPage';
 import EventDetailPage from '@/pages/EventDetailPage';
 import ResourcesPage from '@/pages/ResourcesPage';
@@ -21,18 +23,18 @@ import CollegesPage from '@/pages/CollegesPage';
 
 // Dashboard Pages
 import StudentDashboard from '@/pages/dashboard/StudentDashboard';
-import StudentHackathonDashboard from '@/pages/dashboard/StudentHackathonDashboard'; // Kept for reference but unused in new route
 import MyHackathonsPage from '@/pages/dashboard/MyHackathonsPage';
 import StudentHackathonDetailPage from '@/pages/dashboard/HackathonDetailPage';
 import StudentEventsDashboard from '@/pages/dashboard/StudentEventsDashboard';
 import StudentTeamsDashboard from '@/pages/dashboard/StudentTeamsDashboard';
+import TeamDetailsPage from '@/pages/dashboard/team/TeamDetailsPage';
 import StudentAnalyticsDashboard from '@/pages/dashboard/StudentAnalyticsDashboard';
 import FacultyDashboard from '@/pages/dashboard/FacultyDashboard';
 import FacultyEventsDashboard from '@/pages/dashboard/FacultyEventsDashboard';
 import FacultyHackathonsDashboard from '@/pages/dashboard/FacultyHackathonsDashboard';
 import FacultyAnalyticsDashboard from '@/pages/dashboard/FacultyAnalyticsDashboard';
 import FacultyStudentManagement from '@/pages/dashboard/FacultyStudentManagement';
-import CollegeAdminDashboard from '@/pages/dashboard/CollegeAdminDashboard';
+
 import SuperAdminDashboard from '@/pages/dashboard/SuperAdminDashboard';
 import JudgeDashboard from '@/pages/dashboard/JudgeDashboard';
 import ClubsPage from '@/pages/dashboard/ClubsPage';
@@ -87,7 +89,6 @@ function App() {
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    // Apply theme
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
@@ -107,6 +108,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/hackathons" element={<HackathonsPage />} />
           <Route path="/hackathons/:id" element={<HackathonDetailPage />} />
+          <Route path="/hackathons/:id/register" element={<HackathonRegistrationPage />} />
+          <Route path="admin/college" element={<CollegeAdminDashboard />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventDetailPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
@@ -126,8 +129,12 @@ function App() {
           <Route path="/dashboard/student/my-hackathons/:id" element={<StudentHackathonDetailPage />} />
           <Route path="/dashboard/student/events" element={<StudentEventsDashboard />} />
           <Route path="/dashboard/student/teams" element={<StudentTeamsDashboard />} />
+          <Route path="/dashboard/student/team/:id" element={<TeamDetailsPage />} />
           <Route path="/dashboard/student/analytics" element={<StudentAnalyticsDashboard />} />
           <Route path="/dashboard/student/resources" element={<ResourcesPage />} />
+          <Route path="/dashboard/student/certificates" element={<CertificationCenter />} />
+          <Route path="/dashboard/student/leaderboard" element={<LeaderboardPage />} />
+
           <Route path="/dashboard/faculty" element={<FacultyDashboard />} />
           <Route path="/dashboard/faculty/events" element={<FacultyEventsDashboard />} />
           <Route path="/dashboard/faculty/hackathons" element={<FacultyHackathonsDashboard />} />
@@ -135,7 +142,6 @@ function App() {
           <Route path="/dashboard/faculty/students" element={<FacultyStudentManagement />} />
 
           <Route path="/dashboard/college-admin" element={<CollegeAdminDashboard />} />
-          <Route path="/dashboard/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/dashboard/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/dashboard/judge" element={<JudgeDashboard />} />
 
@@ -147,7 +153,6 @@ function App() {
           <Route path="/dashboard/forum" element={<ForumPage />} />
           <Route path="/dashboard/community" element={<CommunityChatPage />} />
           <Route path="/dashboard/analytics" element={<AnalyticsDashboard />} />
-          <Route path="/dashboard/student/certificates" element={<CertificationCenter />} />
 
           {/* Webinar Routes */}
           <Route path="/dashboard/webinars" element={<WebinarsPage />} />

@@ -7,8 +7,11 @@ import {
     Check,
     Plus,
     LogOut,
-    Search
+    Search,
+    Loader2
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,6 +33,8 @@ const TeamModule: React.FC<TeamModuleProps> = ({ hackathonId }) => {
     const [joinCode, setJoinCode] = useState('');
     const [teamName, setTeamName] = useState('');
     const [copied, setCopied] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const navigate = useNavigate();
 
     const fetchTeamData = async () => {
         if (!user) return;
@@ -56,23 +61,43 @@ const TeamModule: React.FC<TeamModuleProps> = ({ hackathonId }) => {
 
     const handleCreateTeam = async () => {
         if (!teamName.trim() || !user) return;
+        setIsProcessing(true);
         try {
             await hackathonApi.createTeam(hackathonId, teamName, user.id);
             toast.success('Team created successfully!');
             fetchTeamData();
         } catch (error: any) {
-            toast.error(error.message || 'Failed to create team');
+            console.error("Team creation failed:", error);
+            if (error.message?.includes('User not found') || error.message?.includes('404')) {
+                toast.error('User record mismatch. Please re-authenticate.');
+                localStorage.removeItem('auth-storage');
+                navigate('/login');
+            } else {
+                toast.error(error.message || 'Failed to create team');
+            }
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     const handleJoinTeam = async () => {
         if (!joinCode.trim() || !user) return;
+        setIsProcessing(true);
         try {
             await hackathonApi.joinTeam(hackathonId, user.id, joinCode);
             toast.success('Joined team successfully!');
             fetchTeamData();
         } catch (error: any) {
-            toast.error(error.message || 'Invalid join code');
+            console.error("Team join failed:", error);
+            if (error.message?.includes('User not found') || error.message?.includes('404')) {
+                toast.error('User record mismatch. Please re-authenticate.');
+                localStorage.removeItem('auth-storage');
+                navigate('/login');
+            } else {
+                toast.error(error.message || 'Invalid join code');
+            }
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -93,48 +118,61 @@ const TeamModule: React.FC<TeamModuleProps> = ({ hackathonId }) => {
     if (!team) {
         return (
             <div className="grid gap-8 md:grid-cols-2">
-                <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-3xl">
-                    <CardHeader>
-                        <div className="h-12 w-12 rounded-2xl bg-[hsl(var(--teal))]/10 flex items-center justify-center mb-4">
-                            <Plus className="h-6 w-6 text-[hsl(var(--teal))]" />
-                        </div>
-                        <CardTitle>Create a Team</CardTitle>
-                        <CardDescription>Start a new team and invite your friends.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Input
-                            placeholder="Ente team name..."
-                            className="rounded-xl h-12"
-                            value={teamName}
-                            onChange={(e) => setTeamName(e.target.value)}
-                        />
-                        <Button className="w-full h-12 rounded-xl bg-[hsl(var(--teal))] hover:bg-[hsl(var(--teal))]/90 text-white font-bold" onClick={handleCreateTeam}>
-                            Create Team
-                        </Button>
-                    </CardContent>
-                </Card>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                    <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-3xl h-full flex flex-col justify-between">
+                        <CardHeader>
+                            <div className="h-12 w-12 rounded-2xl bg-[hsl(var(--teal))]/10 flex items-center justify-center mb-4">
+                                <Plus className="h-6 w-6 text-[hsl(var(--teal))]" />
+                            </div>
+                            <CardTitle>Create a Team</CardTitle>
+                            <CardDescription>Start a new team and invite your friends.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Input
+                                placeholder="Enter team name..."
+                                className="rounded-xl h-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-bold"
+                                value={teamName}
+                                onChange={(e) => setTeamName(e.target.value)}
+                            />
+                            <Button
+                                className="w-full h-12 rounded-xl bg-[hsl(var(--teal))] hover:scale-[1.02] transition-all text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-[hsl(var(--teal))]/20"
+                                onClick={handleCreateTeam}
+                                disabled={isProcessing}
+                            >
+                                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'CREATE SQUAD'}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
 
-                <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-3xl">
-                    <CardHeader>
-                        <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
-                            <Search className="h-6 w-6 text-blue-500" />
-                        </div>
-                        <CardTitle>Join a Team</CardTitle>
-                        <CardDescription>Enter a join code sent by your team leader.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Input
-                            placeholder="Enter 8-digit join code..."
-                            className="rounded-xl h-12 uppercase"
-                            value={joinCode}
-                            onChange={(e) => setJoinCode(e.target.value)}
-                            maxLength={8}
-                        />
-                        <Button variant="outline" className="w-full h-12 rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50 font-bold" onClick={handleJoinTeam}>
-                            Join Team
-                        </Button>
-                    </CardContent>
-                </Card>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                    <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm rounded-3xl h-full flex flex-col justify-between">
+                        <CardHeader>
+                            <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
+                                <Search className="h-6 w-6 text-blue-500" />
+                            </div>
+                            <CardTitle>Join a Team</CardTitle>
+                            <CardDescription>Enter a join code sent by your team leader.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Input
+                                placeholder="ENTER 8-DIGIT CODE..."
+                                className="rounded-xl h-12 uppercase bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 font-mono font-bold text-center tracking-[0.3em]"
+                                value={joinCode}
+                                onChange={(e) => setJoinCode(e.target.value)}
+                                maxLength={8}
+                            />
+                            <Button
+                                variant="outline"
+                                className="w-full h-12 rounded-xl border-2 border-blue-100 dark:border-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-black uppercase tracking-widest text-xs"
+                                onClick={handleJoinTeam}
+                                disabled={isProcessing}
+                            >
+                                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'JOIN ARENA'}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
         );
     }
@@ -161,21 +199,21 @@ const TeamModule: React.FC<TeamModuleProps> = ({ hackathonId }) => {
                                 {members.map((m) => (
                                     <div key={m.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
                                         <div className="flex items-center gap-4">
-                                            <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                                                <AvatarImage src={`https://avatar.vercel.sh/${m.user.id}`} />
-                                                <AvatarFallback className="bg-slate-200 font-bold">{m.user.firstName[0]}</AvatarFallback>
+                                            <Avatar className="h-12 w-12 border-4 border-white dark:border-slate-700 shadow-xl">
+                                                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${m.user.name}`} />
+                                                <AvatarFallback className="bg-slate-200 dark:bg-slate-700 font-bold">{m.user.name[0]}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <h4 className="font-bold flex items-center gap-2">
-                                                    {m.user.firstName} {m.user.lastName}
+                                                <h4 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                                                    {m.user.name}
                                                     {m.role === 'LEADER' && (
-                                                        <Badge className="bg-orange-100 text-orange-600 border-none text-[10px] h-5 rounded-md px-1.5 font-bold">
+                                                        <Badge className="bg-orange-500 text-white border-none text-[10px] h-5 rounded-md px-1.5 font-black uppercase tracking-tighter shadow-lg shadow-orange-500/20">
                                                             <Shield className="h-3 w-3 mr-0.5" />
-                                                            Leader
+                                                            LEADER
                                                         </Badge>
                                                     )}
                                                 </h4>
-                                                <p className="text-sm text-slate-500">{m.user.department}</p>
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{m.user.department || 'TECH DIVISION'}</p>
                                             </div>
                                         </div>
                                     </div>

@@ -19,6 +19,10 @@ public interface HackathonService {
 
     List<Hackathon> getHackathonsByOrganizer(String organizerId);
 
+    List<Hackathon> getRegisteredHackathons(String userId);
+
+    List<Hackathon> getCompletedHackathons(String userId);
+
     // Problem Statements
     ProblemStatement addProblemStatement(String hackathonId, ProblemStatement problemStatement);
 
@@ -39,4 +43,7 @@ public interface HackathonService {
     void publishResults(String hackathonId, List<HackathonResult> results);
 
     List<HackathonResult> getResults(String hackathonId);
+
+    // Recommendations
+    List<Hackathon> getRecommendations(String userId);
 }

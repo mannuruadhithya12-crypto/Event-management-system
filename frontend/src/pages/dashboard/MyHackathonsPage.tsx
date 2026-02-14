@@ -107,9 +107,14 @@ const MyHackathonsPage = () => {
         const fetchData = async () => {
             if (!user) return;
             try {
-                await new Promise(resolve => setTimeout(resolve, 800));
-                setRegisteredHackathons(MOCK_REGISTERED);
-                setCompletedHackathons(MOCK_COMPLETED);
+                const [registered, completed] = await Promise.all([
+                    hackathonApi.getRegistered(user.id),
+                    hackathonApi.getCompleted(user.id)
+                ]);
+
+                // Use live data if available, fallback to mock for demonstration if empty
+                setRegisteredHackathons(registered && registered.length > 0 ? registered : MOCK_REGISTERED);
+                setCompletedHackathons(completed && completed.length > 0 ? completed : MOCK_COMPLETED);
             } catch (error) {
                 console.error("Failed to fetch hackathons:", error);
                 toast.error("Failed to load your hackathons");

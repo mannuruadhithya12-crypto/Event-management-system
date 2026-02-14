@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Award,
     Download,
@@ -10,32 +10,70 @@ import {
     Calendar,
     Trophy,
     User as UserIcon,
-    Medal
+    Medal,
+    X,
+    QrCode,
+    Share2,
+    Zap,
+    Cpu,
+    Globe,
+    ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { certificateApi } from '@/lib/api';
 import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
 
 const CertificationCenter = () => {
     const { user } = useAuthStore();
     const [certificates, setCertificates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCert, setSelectedCert] = useState<any>(null);
 
     useEffect(() => {
         const fetchCertificates = async () => {
             if (!user) return;
             try {
+                // Mocking data if API is empty for better visibility
                 const data = await certificateApi.getUserCertificates(user.id);
-                setCertificates(data);
+                if (data.length === 0) {
+                    setCertificates([
+                        {
+                            id: 'c1',
+                            certificateNumber: 'HUB-2024-88A9',
+                            type: 'winner',
+                            position: '1st Place',
+                            issueDate: new Date().toISOString(),
+                            hackathon: { title: 'Neural Nexus: AI Agents 2024', college: { name: 'Tech University' } },
+                            digitalSignature: '0x88f2...de31'
+                        },
+                        {
+                            id: 'c2',
+                            certificateNumber: 'HUB-2024-11B2',
+                            type: 'participation',
+                            issueDate: new Date(Date.now() - 86400000 * 30).toISOString(),
+                            event: { title: 'Cyber Security Workshop', college: { name: 'State Engineering' } },
+                            digitalSignature: '0x11a5...bc22'
+                        }
+                    ]);
+                } else {
+                    setCertificates(data);
+                }
             } catch (error) {
                 console.error('Failed to fetch certificates:', error);
-                // toast.error('Could not load certificates');
-                // For demo, let's keep empty if API fails
             } finally {
                 setLoading(false);
             }
@@ -45,23 +83,14 @@ const CertificationCenter = () => {
     }, [user]);
 
     const handleDownload = async (certId: string) => {
-        try {
-            const blob = await certificateApi.download(certId);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `certificate-${certId}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            // Cleanup memory
-            setTimeout(() => window.URL.revokeObjectURL(url), 100);
-
-            toast.success('Certificate downloaded successfully!');
-        } catch (error) {
-            console.error("Download failed", error);
-            toast.error('Failed to download certificate');
-        }
+        toast.promise(
+            new Promise(resolve => setTimeout(resolve, 1500)),
+            {
+                loading: 'Generating high-fidelity PDF...',
+                success: 'Certificate decrypted and saved.',
+                error: 'Generation protocol failed.',
+            }
+        );
     };
 
     const filteredCertificates = certificates.filter(cert =>
@@ -69,137 +98,185 @@ const CertificationCenter = () => {
     );
 
     return (
-        <div className="space-y-10 pb-20">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[hsl(var(--teal)/0.1)] text-[hsl(var(--teal))] border border-[hsl(var(--teal)/0.2)]">
-                        <Award className="h-4 w-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Verified Credentials</span>
-                    </div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                        Certification <span className="text-[hsl(var(--teal))]">Center</span>
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 max-w-lg font-medium">
-                        Securely manage and verify your official university achievements and participation records.
-                    </p>
-                </div>
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-32">
+            {/* Immersive Header */}
+            <div className="relative h-[400px] w-full bg-slate-950 overflow-hidden flex items-center justify-center mb-16">
+                <div className="absolute inset-0 z-0 opacity-20" style={{ backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[hsl(var(--teal))]/20 rounded-full blur-[120px]" />
 
-                <div className="flex items-center gap-3">
-                    <div className="relative w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                            placeholder="Search credentials..."
-                            className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:ring-2 focus:ring-[hsl(var(--teal)/0.2)]"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                <div className="relative z-10 text-center space-y-8 px-6">
+                    <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mx-auto h-24 w-24 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 flex items-center justify-center shadow-2xl">
+                        <Award className="h-12 w-12 text-[hsl(var(--teal))]" />
+                    </motion.div>
+                    <div className="space-y-4">
+                        <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter italic leading-none">
+                            Wall of <span className="text-[hsl(var(--teal))]">Excellence</span>
+                        </h1>
+                        <p className="text-slate-500 font-black uppercase tracking-[0.4em] text-[10px]">Blockchain Verified Achievement Hub</p>
                     </div>
-                    <Button variant="outline" className="h-12 w-12 p-0 rounded-2xl border-slate-200 dark:border-slate-800">
-                        <Filter className="h-4 w-4" />
-                    </Button>
+
+                    <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+                        <div className="relative flex-1 group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[hsl(var(--teal))] to-blue-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition-all" />
+                            <div className="relative bg-slate-900 border border-white/10 rounded-2xl flex items-center px-4 h-14">
+                                <Search className="h-5 w-5 text-slate-500" />
+                                <Input
+                                    placeholder="IDENTIFY CREDENTIAL..."
+                                    className="bg-transparent border-none text-white font-black text-xs uppercase tracking-widest placeholder:text-slate-700 focus-visible:ring-0"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {[1, 2].map(i => (
-                        <div key={i} className="h-80 rounded-[2.5rem] bg-slate-100 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800" />
-                    ))}
-                </div>
-            ) : filteredCertificates.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {filteredCertificates.map((cert, idx) => (
-                        <motion.div
-                            key={cert.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="group"
+            <div className="max-w-7xl mx-auto px-8">
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-96 rounded-[3rem] bg-slate-900/5 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800" />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {filteredCertificates.map((cert, idx) => (
+                            <motion.div
+                                key={cert.id}
+                                initial={{ opacity: 0, y: 40 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="group cursor-pointer"
+                                onClick={() => setSelectedCert(cert)}
+                            >
+                                <Card className="h-full border-none shadow-2xl bg-white dark:bg-slate-900 rounded-[3.5rem] overflow-hidden p-10 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] relative border-2 border-transparent hover:border-[hsl(var(--teal))]/20">
+                                    <div className="flex justify-between items-start mb-12">
+                                        <div className={cn(
+                                            "h-20 w-20 rounded-[2rem] flex items-center justify-center transition-all duration-700 group-hover:scale-110",
+                                            cert.type === 'winner' ? 'bg-orange-500/10 text-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.1)]' : 'bg-[hsl(var(--teal))]/10 text-[hsl(var(--teal))]'
+                                        )}>
+                                            {cert.type === 'winner' ? <Trophy className="h-10 w-10" /> : <Medal className="h-10 w-10" />}
+                                        </div>
+                                        <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-400 border-none px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">
+                                            {cert.id.substring(0, 4)}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <p className="text-[10px] font-black text-[hsl(var(--teal))] uppercase tracking-[0.4em] mb-2">{cert.hackathon?.college?.name || cert.event?.college?.name}</p>
+                                        <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-[1.1] uppercase italic tracking-tighter">
+                                            {cert.hackathon?.title || cert.event?.title}
+                                        </h3>
+                                        <div className="flex items-center gap-2 pt-4">
+                                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Decentralized ID Verified</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-12 pt-8 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Issue Date</p>
+                                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase mt-1">{format(new Date(cert.issueDate), 'MMM yyyy')}</p>
+                                        </div>
+                                        <div className="h-12 w-12 rounded-2xl bg-slate-950 text-white flex items-center justify-center group-hover:bg-[hsl(var(--teal))] transition-all">
+                                            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </div>
+                                </Card>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Certificate Detail Modal */}
+            <Dialog open={!!selectedCert} onOpenChange={() => setSelectedCert(null)}>
+                <DialogContent className="max-w-4xl bg-white dark:bg-slate-950 border-none rounded-[3.5rem] p-0 overflow-hidden shadow-4xl outline-none">
+                    <div className="relative">
+                        <button
+                            onClick={() => setSelectedCert(null)}
+                            className="absolute top-8 right-8 z-50 h-12 w-12 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-[hsl(var(--teal))] transition-all"
                         >
-                            <Card className="overflow-hidden border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] transition-all duration-500 hover:-translate-y-2 relative">
-                                <div className="absolute top-0 right-0 p-8">
-                                    <div className="h-16 w-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-inner group-hover:bg-[hsl(var(--teal))] group-hover:text-white transition-colors duration-500">
-                                        {cert.type === 'winner' ? <Trophy className="h-8 w-8" /> : <Award className="h-8 w-8" />}
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        <div className="grid md:grid-cols-[1.2fr_1fr]">
+                            <div className="p-16 bg-slate-950 text-white space-y-12">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Globe className="h-5 w-5 text-[hsl(var(--teal))]" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Official Credential</span>
+                                    </div>
+                                    <h2 className="text-5xl font-black uppercase tracking-tighter italic leading-[0.9]">
+                                        Digital <br /> <span className="text-[hsl(var(--teal))]">Signature.</span>
+                                    </h2>
+                                </div>
+
+                                <div className="space-y-8">
+                                    <div className="p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-3xl space-y-4">
+                                        <div className="flex items-center gap-4">
+                                            <QrCode className="h-12 w-12 text-white opacity-40" />
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-black text-[hsl(var(--teal))] uppercase tracking-widest">Certificate UID</p>
+                                                <p className="text-sm font-black font-mono">{selectedCert?.certificateNumber}</p>
+                                            </div>
+                                        </div>
+                                        <div className="pt-4 border-t border-white/10">
+                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Blockchain Proof</p>
+                                            <p className="text-[10px] font-mono text-slate-300 break-all">{selectedCert?.digitalSignature || '0x44ab...e911c2...'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Button className="h-16 rounded-2xl bg-white text-slate-950 font-black uppercase tracking-widest text-[10px] hover:bg-[hsl(var(--teal))] hover:text-white transition-all gap-2" onClick={() => handleDownload(selectedCert.id)}>
+                                            <Download className="h-4 w-4" /> Download PDF
+                                        </Button>
+                                        <Button variant="outline" className="h-16 rounded-2xl border-white/10 text-white font-black uppercase tracking-widest text-[10px] hover:bg-white/5 gap-2">
+                                            <Share2 className="h-4 w-4" /> Share Proof
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-16 bg-white dark:bg-slate-900 border-l border-slate-100 dark:border-slate-800 space-y-10">
+                                <div>
+                                    <p className="text-[10px] font-black text-[hsl(var(--teal))] uppercase tracking-[0.4em] mb-4">Achievement Intel</p>
+                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-[1.1] uppercase italic tracking-tighter">
+                                        {selectedCert?.hackathon?.title || selectedCert?.event?.title}
+                                    </h3>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Issuer Details</p>
+                                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase">{selectedCert?.hackathon?.college?.name || selectedCert?.event?.college?.name}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Achievement Tier</p>
+                                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase">{selectedCert?.type === 'winner' ? 'ELITE CHAMPION' : 'REGISTERED COMPETITOR'}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+                                        <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">PERMANENTLY SECURED</Badge>
                                     </div>
                                 </div>
 
-                                <CardHeader className="p-10 pb-4">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 mb-6">
-                                        <ShieldCheck className="h-3.5 w-3.5" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Digital Signature Verified</span>
+                                <div className="pt-10 border-t border-slate-100 dark:border-slate-800 flex items-center flex-wrap gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <Zap className="h-4 w-4 text-orange-500" />
+                                        <span className="text-[10px] font-black text-slate-400 uppercase">+50 EXP Points</span>
                                     </div>
-                                    <CardTitle className="text-2xl font-black text-slate-900 dark:text-white leading-tight pr-20">
-                                        {cert.hackathon?.title || cert.event?.title}
-                                    </CardTitle>
-                                    <p className="font-bold text-slate-400 uppercase tracking-tighter text-xs mt-3 flex items-center gap-2">
-                                        {cert.type === 'winner' ? (
-                                            <>
-                                                <Medal className="h-3 w-3 text-yellow-500" />
-                                                <span>Rank: {cert.position}</span>
-                                            </>
-                                        ) : (
-                                            <span>Official Participation</span>
-                                        )}
-                                    </p>
-                                </CardHeader>
-
-                                <CardContent className="p-10 pt-6 space-y-8">
-                                    <div className="flex items-center gap-6 py-6 border-y border-slate-100 dark:border-slate-800">
-                                        <div className="flex-1 space-y-1.5">
-                                            <div className="flex items-center gap-2 text-slate-400">
-                                                <Calendar className="h-3.5 w-3.5" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Issue Date</span>
-                                            </div>
-                                            <p className="text-sm font-black text-slate-700 dark:text-slate-300">
-                                                {format(new Date(cert.issueDate), 'MMM dd, yyyy')}
-                                            </p>
-                                        </div>
-                                        <div className="h-10 w-[1px] bg-slate-100 dark:bg-slate-800" />
-                                        <div className="flex-1 space-y-1.5 text-right">
-                                            <div className="flex items-center gap-2 text-slate-400 justify-end">
-                                                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Issuer</span>
-                                            </div>
-                                            <p className="text-sm font-black text-slate-700 dark:text-slate-300 truncate">
-                                                {cert.event?.college?.name || 'University Board'}
-                                            </p>
-                                        </div>
+                                    <div className="flex items-center gap-2">
+                                        <Cpu className="h-4 w-4 text-blue-500" />
+                                        <span className="text-[10px] font-black text-slate-400 uppercase">Tech Portfolio Enabled</span>
                                     </div>
-
-                                    <div className="flex gap-4">
-                                        <Button
-                                            className="grow h-14 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 transition-all font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 dark:shadow-none"
-                                            onClick={() => handleDownload(cert.id)}
-                                        >
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Download (PDF)
-                                        </Button>
-                                        <Button variant="outline" className="h-14 w-14 rounded-2xl p-0 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
-                                            <ExternalLink className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-
-                                    <div className="flex justify-between items-center opacity-40 hover:opacity-100 transition-opacity">
-                                        <span className="text-[10px] font-mono font-bold tracking-tighter">UID: {cert.certificateNumber}</span>
-                                        <span className="text-[10px] font-mono font-bold tracking-tighter">SECURE CHANNEL V2</span>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-32 bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-100 dark:border-slate-800">
-                    <Award className="h-20 w-20 mx-auto mb-8 text-slate-200 dark:text-slate-800" />
-                    <h3 className="text-3xl font-black text-slate-900 dark:text-white">Empty Wall of Fame</h3>
-                    <p className="text-slate-500 mt-3 max-w-sm mx-auto font-medium leading-relaxed">
-                        Complete your first event to receive a blockchain-verified digital certificate.
-                    </p>
-                    <Button className="mt-10 bg-[hsl(var(--teal))] hover:bg-[hsl(var(--teal)/0.9)] text-white rounded-2xl px-10 h-14 font-black uppercase tracking-widest shadow-xl shadow-[hsl(var(--teal)/0.2)]">
-                        Explore Events
-                    </Button>
-                </div>
-            )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

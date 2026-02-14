@@ -73,6 +73,20 @@ public class HackathonServiceImpl implements HackathonService {
     }
 
     @Override
+    public List<Hackathon> getRegisteredHackathons(String userId) {
+        return getHackathonsByStudent(userId).stream()
+                .filter(h -> !h.getStatus().equalsIgnoreCase("COMPLETED"))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public List<Hackathon> getCompletedHackathons(String userId) {
+        return getHackathonsByStudent(userId).stream()
+                .filter(h -> h.getStatus().equalsIgnoreCase("COMPLETED"))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
     public ProblemStatement addProblemStatement(String hackathonId, ProblemStatement problemStatement) {
         Hackathon hackathon = hackathonRepository.findById(hackathonId)
                 .orElseThrow(() -> new RuntimeException("Hackathon not found"));
@@ -212,5 +226,16 @@ public class HackathonServiceImpl implements HackathonService {
     @Override
     public List<HackathonResult> getResults(String hackathonId) {
         return hackathonResultRepository.findByHackathonId(hackathonId);
+    }
+
+    @Override
+    public List<Hackathon> getRecommendations(String userId) {
+        // Simple logic: return some hackathons that the user is not part of
+        // In production, this would use ML models or skill matching
+        List<Hackathon> all = hackathonRepository.findAll();
+        return all.stream()
+                .filter(h -> !"COMPLETED".equals(h.getStatus()))
+                .limit(3)
+                .collect(java.util.stream.Collectors.toList());
     }
 }

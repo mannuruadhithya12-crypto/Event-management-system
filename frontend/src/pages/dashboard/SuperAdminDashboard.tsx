@@ -109,7 +109,7 @@ const SuperAdminDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-500">{stat.label}</p>
-                    <p className="mt-1 text-3xl font-bold">{stat.value.toLocaleString()}</p>
+                    <p className="mt-1 text-3xl font-bold">{(stat.value || 0).toLocaleString()}</p>
                     <p className="mt-1 text-xs text-green-500">{stat.change} this month</p>
                   </div>
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.bgColor}`}>
@@ -234,7 +234,7 @@ const SuperAdminDashboard = () => {
                         <div className="flex-1">
                           <h4 className="font-semibold">{college.name}</h4>
                           <div className="mt-1 flex items-center gap-3 text-sm text-slate-500">
-                            <span>{college.studentCount.toLocaleString()} students</span>
+                            <span>{(college.studentCount || 0).toLocaleString()} students</span>
                             <span>•</span>
                             <span>{college.facultyCount} faculty</span>
                           </div>
@@ -304,10 +304,10 @@ const SuperAdminDashboard = () => {
                       >
                         <div className="flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-blue-500/10">
                           <span className="text-xs font-medium text-blue-500">
-                            {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short' })}
+                            {event.startDate ? new Date(event.startDate).toLocaleDateString('en-US', { month: 'short' }) : 'TBD'}
                           </span>
                           <span className="text-xl font-bold text-blue-500">
-                            {new Date(event.startDate).getDate()}
+                            {event.startDate ? new Date(event.startDate).getDate() : '--'}
                           </span>
                         </div>
                         <div className="flex-1">
@@ -351,7 +351,7 @@ const SuperAdminDashboard = () => {
                           <h4 className="font-semibold">{webinar.title}</h4>
                           <p className="text-sm text-slate-500">{webinar.college}</p>
                         </div>
-                        <Badge variant="outline">{new Date(webinar.date).toLocaleDateString()}</Badge>
+                        <Badge variant="outline">{webinar.date ? new Date(webinar.date).toLocaleDateString() : 'TBD'}</Badge>
                       </div>
                     ))}
                   </div>

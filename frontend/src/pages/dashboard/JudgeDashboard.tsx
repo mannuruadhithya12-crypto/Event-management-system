@@ -71,7 +71,7 @@ const JudgeDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-500">{stat.label}</p>
-                    <p className="mt-1 text-3xl font-bold">{stat.value}</p>
+                    <p className="mt-1 text-3xl font-bold">{(stat.value || 0).toLocaleString()}</p>
                   </div>
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.bgColor}`}>
                     <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -163,13 +163,13 @@ const JudgeDashboard = () => {
                       <div className="mt-1 flex items-center gap-3 text-sm text-slate-500">
                         <span>{hackathon.registeredTeams} teams</span>
                         <span>•</span>
-                        <span>${hackathon.prizePool.toLocaleString()} prize</span>
+                        <span>${(hackathon.prizePool || 0).toLocaleString()} prize</span>
                       </div>
                     </div>
                     <div className="text-right">
                       <Badge>{hackathon.status.replace('_', ' ')}</Badge>
                       <p className="mt-1 text-xs text-slate-500">
-                        {new Date(hackathon.endDate).toLocaleDateString()}
+                        {hackathon.endDate ? new Date(hackathon.endDate).toLocaleDateString() : 'TBD'}
                       </p>
                     </div>
                   </div>

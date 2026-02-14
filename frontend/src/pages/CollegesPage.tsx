@@ -24,7 +24,7 @@ const CollegesPage = () => {
 
   const filteredColleges = mockColleges.filter((college) => {
     if (searchQuery && !college.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !college.location.toLowerCase().includes(searchQuery.toLowerCase())) {
+      !college.location.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
     return true;
@@ -40,7 +40,7 @@ const CollegesPage = () => {
             backgroundSize: '40px 40px',
           }} />
         </div>
-        
+
         <div className="relative mx-auto max-w-7xl text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
@@ -50,7 +50,7 @@ const CollegesPage = () => {
           >
             <Building2 className="h-10 w-10 text-white" />
           </motion.div>
-          
+
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -152,7 +152,7 @@ const CollegesPage = () => {
                       {college.name}
                     </h3>
                     <p className="text-sm text-slate-500">{college.shortName}</p>
-                    
+
                     <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                       <MapPin className="h-4 w-4" />
                       {college.location}
@@ -169,7 +169,7 @@ const CollegesPage = () => {
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-[hsl(var(--navy))] dark:text-[hsl(var(--teal))]">
                           <GraduationCap className="h-4 w-4" />
-                          <span className="font-bold">{college.studentCount.toLocaleString()}</span>
+                          <span className="font-bold">{(college.studentCount || 0).toLocaleString()}</span>
                         </div>
                         <p className="text-xs text-slate-500">Students</p>
                       </div>
@@ -191,16 +191,16 @@ const CollegesPage = () => {
 
                     {/* Actions */}
                     <div className="mt-4 flex gap-3">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="flex-1"
                         onClick={() => navigate(`/hackathons?college=${college.id}`)}
                       >
                         <Trophy className="mr-2 h-4 w-4" />
                         Hackathons
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="flex-1"
                         onClick={() => navigate(`/events?college=${college.id}`)}
                       >
@@ -250,13 +250,13 @@ const CollegesPage = () => {
                 backgroundSize: '40px 40px',
               }} />
             </div>
-            
+
             <div className="relative">
               <h2 className="text-3xl font-bold text-white sm:text-4xl">
                 Want to Partner with Us?
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
-                Join hundreds of colleges using CollegeHub to empower their students 
+                Join hundreds of colleges using CollegeHub to empower their students
                 with opportunities and resources.
               </p>
               <Button

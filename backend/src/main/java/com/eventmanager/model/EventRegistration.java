@@ -22,15 +22,20 @@ public class EventRegistration {
 
     private LocalDateTime registrationDate = LocalDateTime.now();
 
-    private String status = "REGISTERED"; // REGISTERED, CANCELLED, ATTENDED
+    private String status = "REGISTERED"; 
 
     private Boolean certificateIssued = false;
 
-    public Event getEvent() {
-        return event;
-    }
-
-    public void setEvent(Event event) {
-        this.event = event;
-    }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public Event getEvent() { return event; }
+    public void setEvent(Event event) { this.event = event; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public LocalDateTime getRegistrationDate() { return registrationDate; }
+    public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public Boolean getCertificateIssued() { return certificateIssued; }
+    public void setCertificateIssued(Boolean certificateIssued) { this.certificateIssued = certificateIssued; }
 }

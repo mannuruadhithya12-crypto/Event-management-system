@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface WebinarRepository extends JpaRepository<Webinar, String> {
-    List<Webinar> findByCollegeId(String collegeId);
-
-    List<Webinar> findByCategory(String category);
+    List<Webinar> findByStatus(String status);
+    List<Webinar> findByHostCollege(String college);
+    List<Webinar> findByTitleContainingIgnoreCaseOrSpeakerNameContainingIgnoreCase(String title, String speaker);
 }

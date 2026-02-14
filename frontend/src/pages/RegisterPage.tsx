@@ -1,7 +1,23 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, GraduationCap, Building2, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  GraduationCap,
+  Building2,
+  CheckCircle,
+  ChevronLeft,
+  Sparkles,
+  ShieldCheck,
+  Zap,
+  Globe,
+  Rocket
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,11 +31,12 @@ import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import type { UserRole } from '@/types';
 import { mockColleges } from '@/data/mockData';
+import { cn } from '@/lib/utils';
 
 const steps = [
-  { id: 1, name: 'Account Type' },
-  { id: 2, name: 'Personal Info' },
-  { id: 3, name: 'Account Details' },
+  { id: 1, name: 'Identity' },
+  { id: 2, name: 'Credentials' },
+  { id: 3, name: 'Security' },
 ];
 
 const RegisterPage = () => {
@@ -40,16 +57,16 @@ const RegisterPage = () => {
 
   const handleNext = () => {
     if (currentStep === 1 && !formData.role) {
-      toast.error('Please select your role');
+      toast.error('Identity selection is mandatory');
       return;
     }
     if (currentStep === 2) {
       if (!formData.firstName || !formData.lastName) {
-        toast.error('Please fill in all fields');
+        toast.error('Identity details are incomplete');
         return;
       }
       if (formData.role === 'student' && (!formData.collegeId || !formData.year)) {
-        toast.error('Please fill in all fields');
+        toast.error('Institutional verification data missing');
         return;
       }
     }
@@ -64,7 +81,7 @@ const RegisterPage = () => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      toast.error('Please fill in all fields');
+      toast.error('Access credentials missing');
       return;
     }
 
@@ -79,17 +96,17 @@ const RegisterPage = () => {
         department: formData.department,
         year: formData.year ? parseInt(formData.year) : undefined,
       });
-      toast.success('Account created successfully!');
-      navigate('/dashboard');
+      toast.success('Registration successful. Please login to continue.');
+      navigate('/login');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create account');
+      toast.error(error.message || 'Registration synthesis failed');
     }
   };
 
   const roles = [
-    { value: 'student', label: 'Student', icon: GraduationCap, description: 'Participate in hackathons and events' },
-    { value: 'faculty', label: 'Faculty', icon: Building2, description: 'Organize events and manage content' },
-    { value: 'college_admin', label: 'College Admin', icon: CheckCircle, description: 'Manage college operations' },
+    { value: 'student', label: 'Competitor', icon: Rocket, description: 'Enter arenas, build teams, and win big' },
+    { value: 'faculty', label: 'Architect', icon: Building2, description: 'Design challenges and mentor legends' },
+    { value: 'college_admin', label: 'Director', icon: ShieldCheck, description: 'Manage institutional nodes and access' },
   ];
 
   const departments = [
@@ -108,151 +125,163 @@ const RegisterPage = () => {
   const years = ['1', '2', '3', '4', '5'];
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left Side - Form */}
-      <div className="flex w-full flex-col justify-center px-4 py-12 sm:px-6 lg:w-1/2 lg:px-8 xl:px-12">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mx-auto w-full max-w-md"
-        >
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[hsl(var(--navy))] to-[hsl(var(--teal))]">
-              <GraduationCap className="h-6 w-6 text-white" />
+    <div className="flex min-h-screen bg-slate-50/50 dark:bg-slate-950 overflow-hidden">
+      {/* Visual Workspace (Left) */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-950">
+        <div className="absolute inset-0 z-0 select-none pointer-events-none">
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[hsl(var(--teal))]/20 rounded-full blur-[120px] -mr-96 -mt-96" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] -ml-48 -mb-48" />
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`, backgroundSize: '48px 48px' }} />
+        </div>
+
+        <div className="relative z-10 w-full flex flex-col justify-between p-20">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center shadow-2xl rotate-3 transition-transform hover:rotate-0">
+              <Zap className="h-6 w-6 text-slate-950 fill-current" />
             </div>
-            <span className="text-xl font-bold">CollegeHub</span>
+            <span className="text-2xl font-black text-white italic tracking-tighter uppercase">Nexus</span>
           </Link>
 
-          <div className="mt-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-              Create your account
-            </h1>
-            <p className="mt-2 text-slate-600 dark:text-slate-400">
-              Join thousands of students and faculty members
-            </p>
-          </div>
+          <div className="space-y-12">
+            <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+              <h2 className="text-7xl font-black text-white leading-none tracking-tighter italic uppercase">
+                The Next <br /> <span className="text-[hsl(var(--teal))]">Generation.</span>
+              </h2>
+              <p className="mt-8 text-xl text-slate-500 font-bold max-w-md leading-relaxed">
+                Join the elite network of university innovators and architects building the decentralized future.
+              </p>
+            </motion.div>
 
-          {/* Progress Steps */}
-          <div className="mt-8">
-            <div className="flex items-center justify-between">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${currentStep >= step.id
-                        ? 'bg-[hsl(var(--navy))] text-white dark:bg-[hsl(var(--teal))]'
-                        : 'bg-slate-200 text-slate-500 dark:bg-slate-700'
-                      }`}
-                  >
-                    {currentStep > step.id ? <CheckCircle className="h-5 w-5" /> : step.id}
+            <div className="grid grid-cols-2 gap-8">
+              {[
+                { label: 'Active Arenas', val: '240+', icon: Globe },
+                { label: 'Verified Minds', val: '80K+', icon: User },
+                { label: 'Bounty Pool', val: '$2.4M', icon: Sparkles },
+                { label: 'Certificates', val: 'Secure', icon: ShieldCheck },
+              ].map((s, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <s.icon className="h-3.5 w-3.5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{s.label}</span>
                   </div>
-                  <span
-                    className={`ml-2 text-sm font-medium ${currentStep >= step.id
-                        ? 'text-slate-900 dark:text-white'
-                        : 'text-slate-500'
-                      }`}
-                  >
-                    {step.name}
-                  </span>
-                  {index < steps.length - 1 && (
-                    <div className="mx-4 h-px w-8 bg-slate-200 dark:bg-slate-700" />
-                  )}
+                  <p className="text-3xl font-black text-white uppercase italic">{s.val}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Step 1: Role Selection */}
-          {currentStep === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8 space-y-4"
-            >
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                I am a...
-              </p>
-              <div className="grid gap-4">
-                {roles.map((role) => (
-                  <button
-                    key={role.value}
-                    onClick={() => setFormData({ ...formData, role: role.value as UserRole })}
-                    className={`flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${formData.role === role.value
-                        ? 'border-[hsl(var(--navy))] bg-[hsl(var(--navy))]/5 dark:border-[hsl(var(--teal))] dark:bg-[hsl(var(--teal))]/5'
-                        : 'border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600'
-                      }`}
-                  >
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${formData.role === role.value
-                        ? 'bg-[hsl(var(--navy))] text-white dark:bg-[hsl(var(--teal))]'
-                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-                      }`}>
-                      <role.icon className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900 dark:text-white">{role.label}</p>
-                      <p className="text-sm text-slate-500">{role.description}</p>
-                    </div>
-                  </button>
+          <div className="flex items-center gap-4 pt-12 border-t border-white/5">
+            <div className="flex -space-x-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-10 w-10 rounded-full border-2 border-slate-950 bg-slate-800 flex items-center justify-center overflow-hidden">
+                  <img src={`https://i.pravatar.cc/100?u=${i + 10}`} alt="user" />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+              Infiltrated by <span className="text-white">524</span> agents in the last hour
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Registration Interface (Right) */}
+      <div className="flex w-full flex-col justify-center px-8 lg:w-1/2 relative bg-white dark:bg-slate-950">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mx-auto w-full max-w-[480px] space-y-12"
+        >
+          {/* Header */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Join <span className="text-[hsl(var(--teal))]">Nexus</span></h1>
+              <div className="flex gap-2">
+                {steps.map(s => (
+                  <div key={s.id} className={`h-1.5 w-8 rounded-full transition-all duration-500 ${currentStep >= s.id ? 'bg-[hsl(var(--teal))]' : 'bg-slate-100 dark:bg-slate-800'}`} />
                 ))}
               </div>
-              <Button onClick={handleNext} className="btn-primary w-full">
-                Continue
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </motion.div>
-          )}
+            </div>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Phase {currentStep}: {steps[currentStep - 1].name}</p>
+          </div>
 
-          {/* Step 2: Personal Info */}
-          {currentStep === 2 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8 space-y-4"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    First Name
-                  </label>
-                  <div className="relative mt-1">
-                    <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      placeholder="John"
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Last Name
-                  </label>
-                  <Input
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    placeholder="Doe"
-                  />
-                </div>
-              </div>
-
-              {(formData.role === 'student' || formData.role === 'faculty') && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                      College
-                    </label>
-                    <Select
-                      value={formData.collegeId}
-                      onValueChange={(value) => setFormData({ ...formData, collegeId: value })}
+          <AnimatePresence mode="wait">
+            {currentStep === 1 && (
+              <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                <div className="grid gap-4">
+                  {roles.map((role) => (
+                    <button
+                      key={role.value}
+                      onClick={() => setFormData({ ...formData, role: role.value as UserRole })}
+                      className={cn(
+                        "group flex items-center gap-6 rounded-[2rem] border-2 p-6 text-left transition-all relative overflow-hidden",
+                        formData.role === role.value
+                          ? "border-[hsl(var(--teal))] bg-[hsl(var(--teal))]/5 dark:bg-[hsl(var(--teal))]/10 shadow-xl shadow-[hsl(var(--teal))]/5"
+                          : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900"
+                      )}
                     >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select your college" />
+                      <div className={cn(
+                        "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl transition-all duration-500",
+                        formData.role === role.value
+                          ? "bg-[hsl(var(--teal))] text-white scale-110 shadow-lg"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:scale-105"
+                      )}>
+                        <role.icon className="h-8 w-8" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-widest">{role.label}</p>
+                        <p className="text-xs font-bold text-slate-500 uppercase leading-snug">{role.description}</p>
+                      </div>
+                      {formData.role === role.value && (
+                        <div className="absolute top-4 right-6">
+                          <CheckCircle className="h-5 w-5 text-[hsl(var(--teal))]" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <Button onClick={handleNext} className="h-16 w-full rounded-2xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-all mt-4">
+                  CONTINUE TO ACCOUNT SYNTHESIS <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </motion.div>
+            )}
+
+            {currentStep === 2 && (
+              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Legacy First Name</label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase"
+                          placeholder="JOHN"
+                          value={formData.firstName}
+                          onChange={e => setFormData({ ...formData, firstName: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Legacy Last Name</label>
+                      <Input
+                        className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase"
+                        placeholder="DOE"
+                        value={formData.lastName}
+                        onChange={e => setFormData({ ...formData, lastName: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Institutional Node (College)</label>
+                    <Select value={formData.collegeId} onValueChange={val => setFormData({ ...formData, collegeId: val })}>
+                      <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase">
+                        <SelectValue placeholder="SELECT INSTITUTION..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl">
                         {mockColleges.map((college) => (
-                          <SelectItem key={college.id} value={college.id}>
+                          <SelectItem key={college.id} value={college.id} className="font-black text-xs uppercase p-4 hover:bg-[hsl(var(--teal))]/10 transition-colors">
                             {college.name}
                           </SelectItem>
                         ))}
@@ -260,203 +289,114 @@ const RegisterPage = () => {
                     </Select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Department
-                    </label>
-                    <Select
-                      value={formData.department}
-                      onValueChange={(value) => setFormData({ ...formData, department: value })}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select your department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept} value={dept}>
-                            {dept}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Faculty / Dept</label>
+                      <Select value={formData.department} onValueChange={val => setFormData({ ...formData, department: val })}>
+                        <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase">
+                          <SelectValue placeholder="DEPT..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl">
+                          {departments.map((dept) => (
+                            <SelectItem key={dept} value={dept} className="font-black text-xs uppercase">
+                              {dept}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Current Cycle (Year)</label>
+                      <Select value={formData.year} onValueChange={val => setFormData({ ...formData, year: val })}>
+                        <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase">
+                          <SelectValue placeholder="YEAR..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl">
+                          {years.map((y) => (
+                            <SelectItem key={y} value={y} className="font-black text-xs uppercase">
+                              YEAR {y}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </>
-              )}
-
-              {formData.role === 'student' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Year of Study
-                  </label>
-                  <Select
-                    value={formData.year}
-                    onValueChange={(value) => setFormData({ ...formData, year: value })}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select your year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year}>
-                          Year {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
-              )}
 
-              <div className="flex gap-4">
-                <Button onClick={handleBack} variant="outline" className="flex-1">
-                  Back
-                </Button>
-                <Button onClick={handleNext} className="btn-primary flex-1">
-                  Continue
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 3: Account Details */}
-          {currentStep === 3 && (
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              onSubmit={handleSubmit}
-              className="mt-8 space-y-4"
-            >
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Email address
-                </label>
-                <div className="relative mt-1">
-                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="you@college.edu"
-                    className="pl-10"
-                  />
+                <div className="flex gap-4">
+                  <Button onClick={handleBack} variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 font-black uppercase tracking-widest text-[10px] px-8">
+                    <ChevronLeft className="h-4 w-4 mr-2" /> REVERT
+                  </Button>
+                  <Button onClick={handleNext} className="h-14 flex-1 rounded-2xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-all">
+                    AUTHORIZE INFORMATION <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
-              </div>
+              </motion.div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Password
-                </label>
-                <div className="relative mt-1">
-                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="••••••••"
-                    className="pl-10 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
+            {currentStep === 3 && (
+              <motion.form key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} onSubmit={handleSubmit} className="space-y-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Secure Communications (Email)</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="email"
+                        className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase tracking-widest"
+                        placeholder="IDENTIFIER@NEXUS.ID"
+                        value={formData.email}
+                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Access Key (Password)</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        className="h-14 pl-12 pr-12 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs tracking-widest"
+                        placeholder="••••••••••••"
+                        value={formData.password}
+                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[hsl(var(--teal))] transition-colors">
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2">Must exceed 8 characters with multi-tier entropy</p>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <input id="terms" type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-200 text-[hsl(var(--teal))] focus:ring-[hsl(var(--teal))]" required />
+                    <label htmlFor="terms" className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed tracking-widest">
+                      I accept the <Link to="/terms" className="text-slate-900 dark:text-white underline">Terms of Engagement</Link> and <Link to="/privacy" className="text-slate-900 dark:text-white underline">Protocol Privacy</Link>.
+                    </label>
+                  </div>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">
-                  Must be at least 8 characters with uppercase, lowercase, and number
-                </p>
-              </div>
 
-              <div className="flex items-center">
-                <input
-                  id="terms"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-slate-300 text-[hsl(var(--navy))] focus:ring-[hsl(var(--navy))]"
-                />
-                <label htmlFor="terms" className="ml-2 text-sm text-slate-600 dark:text-slate-400">
-                  I agree to the{' '}
-                  <Link to="/terms" className="text-[hsl(var(--navy))] hover:underline dark:text-[hsl(var(--teal))]">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link to="/privacy" className="text-[hsl(var(--navy))] hover:underline dark:text-[hsl(var(--teal))]">
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
+                <div className="flex gap-4">
+                  <Button type="button" onClick={handleBack} variant="outline" className="h-16 rounded-2xl border-2 border-slate-100 dark:border-slate-800 font-black uppercase tracking-widest text-[10px] px-8">
+                    <ChevronLeft className="h-4 w-4 mr-2" /> REVERT
+                  </Button>
+                  <Button type="submit" className="h-16 flex-1 rounded-2xl bg-slate-950 dark:bg-white text-white dark:text-slate-950 font-black uppercase tracking-widest text-[10px] hover:scale-[1.02] transition-all shadow-2xl shadow-slate-200 dark:shadow-none" disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-400 border-t-white" />
+                    ) : (
+                      <>INITIALIZE AGENT PROFILE <Zap className="ml-2 h-4 w-4" /></>
+                    )}
+                  </Button>
+                </div>
+              </motion.form>
+            )}
+          </AnimatePresence>
 
-              <div className="flex gap-4">
-                <Button type="button" onClick={handleBack} variant="outline" className="flex-1">
-                  Back
-                </Button>
-                <Button type="submit" className="btn-primary flex-1" disabled={isLoading}>
-                  {isLoading ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <>
-                      Create Account
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            </motion.form>
-          )}
-
-          <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
-            Already have an account?{' '}
-            <Link
-              to="/login"
-              className="font-medium text-[hsl(var(--navy))] hover:text-[hsl(var(--navy))]/80 dark:text-[hsl(var(--teal))]"
-            >
-              Sign in
-            </Link>
+          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+            Authorized Access Only? <Link to="/login" className="text-slate-900 dark:text-white underline decoration-[hsl(var(--teal))] decoration-2 underline-offset-4">Decrypt Session</Link>
           </p>
         </motion.div>
-      </div>
-
-      {/* Right Side - Image */}
-      <div className="hidden lg:block lg:w-1/2">
-        <div className="relative h-full w-full overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&h=800&fit=crop"
-            alt="Students collaborating"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--teal))]/80 to-[hsl(var(--navy))]/80" />
-
-          <div className="absolute inset-0 flex flex-col justify-center px-12 text-white">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              <h2 className="text-3xl font-bold lg:text-4xl">
-                Start Your Journey Today
-              </h2>
-              <p className="mt-4 text-lg text-white/80">
-                Join a community of innovators, creators, and leaders.
-                Discover opportunities that will shape your future.
-              </p>
-
-              <div className="mt-8 space-y-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-[hsl(var(--orange))]" />
-                  <span>Access to 1000+ hackathons and events</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-[hsl(var(--orange))]" />
-                  <span>Connect with students from 500+ colleges</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-[hsl(var(--orange))]" />
-                  <span>Build your portfolio and earn certificates</span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
       </div>
     </div>
   );

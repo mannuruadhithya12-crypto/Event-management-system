@@ -59,6 +59,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/clubs/**").permitAll() // Public access to clubs for testing
                         .requestMatchers("/api/events/**").permitAll() // Public access to events for testing
                         .requestMatchers("/api/forum/**").permitAll() // Public access to forum for testing
+                        .requestMatchers("/api/student/**").permitAll() // Public access to student teams for testing
+                        .requestMatchers("/api/hackathons/**").permitAll() // Public access to hackathons for testing
+                        .requestMatchers("/api/webinars/**").permitAll() // Public access to webinars for testing
 
                         .anyRequest().authenticated() // Secure everything else
                 )

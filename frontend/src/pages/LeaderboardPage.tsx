@@ -196,7 +196,7 @@ const LeaderboardPage = () => {
                     <h3 className="mt-2 text-lg font-semibold">{topThree[1]?.name}</h3>
                     <p className="text-sm text-slate-500">{topThree[1]?.collegeName}</p>
                     <p className="mt-1 text-2xl font-bold text-slate-400">
-                      {topThree[1]?.points.toLocaleString()}
+                      {(topThree[1]?.points || 0).toLocaleString()}
                     </p>
                   </div>
                 </motion.div>
@@ -228,7 +228,7 @@ const LeaderboardPage = () => {
                     <h3 className="mt-2 text-xl font-semibold">{topThree[0]?.name}</h3>
                     <p className="text-sm text-slate-500">{topThree[0]?.collegeName}</p>
                     <p className="mt-1 text-3xl font-bold text-amber-500">
-                      {topThree[0]?.points.toLocaleString()}
+                      {(topThree[0]?.points || 0).toLocaleString()}
                     </p>
                   </div>
                 </motion.div>
@@ -258,7 +258,7 @@ const LeaderboardPage = () => {
                     <h3 className="mt-2 text-lg font-semibold">{topThree[2]?.name}</h3>
                     <p className="text-sm text-slate-500">{topThree[2]?.collegeName}</p>
                     <p className="mt-1 text-2xl font-bold text-amber-700">
-                      {topThree[2]?.points.toLocaleString()}
+                      {(topThree[2]?.points || 0).toLocaleString()}
                     </p>
                   </div>
                 </motion.div>
@@ -358,7 +358,7 @@ const LeaderboardPage = () => {
                           </td>
                           <td className="px-6 py-4 text-right">
                             <span className="text-lg font-bold text-[hsl(var(--navy))] dark:text-[hsl(var(--teal))]">
-                              {entry.points.toLocaleString()}
+                              {(entry.points || 0).toLocaleString()}
                             </span>
                           </td>
                         </motion.tr>
@@ -382,7 +382,7 @@ const LeaderboardPage = () => {
                       <img src={college.logo} alt={college.name} className="h-12 w-12 rounded-lg" />
                       <div className="flex-1">
                         <h4 className="font-bold">{college.name}</h4>
-                        <p className="text-xs text-slate-500">{college.studentCount.toLocaleString()} Students</p>
+                        <p className="text-xs text-slate-500">{(college.studentCount || 0).toLocaleString()} Students</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xl font-bold text-[hsl(var(--teal))]">{college.stats.engagementScore}</p>
