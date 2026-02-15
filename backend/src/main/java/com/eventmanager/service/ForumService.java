@@ -20,4 +20,6 @@ public interface ForumService {
     ForumComment addComment(String postId, String authorId, String content);
 
     List<ForumComment> getComments(String postId);
+    
+    void seedPosts();
 }

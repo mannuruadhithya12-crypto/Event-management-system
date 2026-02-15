@@ -26,19 +26,22 @@ public class WebinarServiceImpl implements WebinarService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final ActivityService activityService;
+    private final CertificateService certificateService;
 
     public WebinarServiceImpl(WebinarRepository webinarRepository,
                               WebinarRegistrationRepository registrationRepository,
                               WebinarFeedbackRepository feedbackRepository,
                               UserRepository userRepository,
                               NotificationService notificationService,
-                              ActivityService activityService) {
+                              ActivityService activityService,
+                              CertificateService certificateService) {
         this.webinarRepository = webinarRepository;
         this.registrationRepository = registrationRepository;
         this.feedbackRepository = feedbackRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.activityService = activityService;
+        this.certificateService = certificateService;
     }
 
     @Override
@@ -70,6 +73,7 @@ public class WebinarServiceImpl implements WebinarService {
         webinar.setDuration(request.getDuration());
         webinar.setMaxParticipants(request.getMaxParticipants());
         webinar.setBannerImage(request.getBannerImage());
+        webinar.setAgenda(request.getAgenda());
         webinar.setCreatedBy(userId);
         
         Webinar saved = webinarRepository.save(webinar);
@@ -95,6 +99,7 @@ public class WebinarServiceImpl implements WebinarService {
         webinar.setDuration(request.getDuration());
         webinar.setMaxParticipants(request.getMaxParticipants());
         if (request.getBannerImage() != null) webinar.setBannerImage(request.getBannerImage());
+        if (request.getAgenda() != null) webinar.setAgenda(request.getAgenda());
         
         return convertToDto(webinarRepository.save(webinar), webinar.getCreatedBy());
     }
@@ -146,6 +151,26 @@ public class WebinarServiceImpl implements WebinarService {
             "You have registered for '" + webinar.getTitle() + "'.", "WEBINAR_REGISTERED", webinarId);
             
         activityService.logActivity(userId, "WEBINAR_REGISTERED", "Registered for webinar: " + webinar.getTitle(), webinarId, webinar.getTitle());
+    }
+
+    @Override
+    public void unregisterForWebinar(String userId, String webinarId) {
+        Webinar webinar = webinarRepository.findById(webinarId)
+                .orElseThrow(() -> new RuntimeException("Webinar not found"));
+        User student = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        WebinarRegistration reg = registrationRepository.findByWebinarAndStudent(webinar, student)
+                .orElseThrow(() -> new RuntimeException("Not registered for this webinar"));
+
+        registrationRepository.delete(reg);
+
+        if (webinar.getRegisteredCount() > 0) {
+            webinar.setRegisteredCount(webinar.getRegisteredCount() - 1);
+            webinarRepository.save(webinar);
+        }
+
+        activityService.logActivity(userId, "WEBINAR_UNREGISTERED", "Cancelled registration for webinar: " + webinar.getTitle(), webinarId, webinar.getTitle());
     }
 
     @Override
@@ -253,6 +278,7 @@ public class WebinarServiceImpl implements WebinarService {
             w.setMaxParticipants(100 + random.nextInt(400));
             w.setRegisteredCount(random.nextInt(w.getMaxParticipants()));
             w.setBannerImage("https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop");
+            w.setAgenda("1. Introduction (15 mins)\n2. Key Concepts & Theory (30 mins)\n3. Case Studies & Real-world examples (30 mins)\n4. Live Demo/Workshop (30 mins)\n5. Q&A and Networking (15 mins)");
             w.setCreatedBy("admin-id");
             
             webinarRepository.save(w);
@@ -278,6 +304,7 @@ public class WebinarServiceImpl implements WebinarService {
         dto.setStatus(w.getStatus());
         dto.setCreatedBy(w.getCreatedBy());
         dto.setCreatedAt(w.getCreatedAt());
+        dto.setAgenda(w.getAgenda());
         
         if (userId != null) {
             dto.setIsRegistered(registrationRepository.findByWebinarId(w.getId()).stream()
@@ -301,90 +328,6 @@ public class WebinarServiceImpl implements WebinarService {
         return dto;
     }
 
-    @Override
-    public String generateCertificate(String userId, String webinarId) {
-        Webinar webinar = webinarRepository.findById(webinarId)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
-        User student = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        WebinarRegistration reg = registrationRepository.findByWebinarAndStudent(webinar, student)
-                .orElseThrow(() -> new RuntimeException("Registration not found"));
-
-        if (!"COMPLETED".equals(webinar.getStatus())) {
-            throw new RuntimeException("Certificate can only be generated for completed webinars");
-        }
-        
-        // Mark as generated
-        reg.setCertificateGenerated(true);
-        // In a real app, this might point to a storage URL (S3). 
-        // Here we point to the download endpoint.
-        String downloadUrl = "/api/webinars/" + webinarId + "/certificate/download?userId=" + userId;
-        reg.setCertificateUrl(downloadUrl);
-        registrationRepository.save(reg);
-        
-        return downloadUrl;
-    }
-
-    @Override
-    public byte[] downloadCertificate(String userId, String webinarId) {
-        Webinar webinar = webinarRepository.findById(webinarId)
-                .orElseThrow(() -> new RuntimeException("Webinar not found"));
-        User student = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Ensure registration exists
-        registrationRepository.findByWebinarAndStudent(webinar, student)
-                .orElseThrow(() -> new RuntimeException("Registration not found"));
-
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Document document = new Document();
-            PdfWriter.getInstance(document, out);
-            document.open();
-
-            Font titleFont = new Font(Font.HELVETICA, 24, Font.BOLD, Color.BLUE);
-            Font contentFont = new Font(Font.HELVETICA, 16, Font.NORMAL, Color.BLACK);
-
-            Paragraph title = new Paragraph("CERTIFICATE OF COMPLETION", titleFont);
-            title.setAlignment(Element.ALIGN_CENTER);
-            title.setSpacingAfter(20);
-            document.add(title);
-
-            Paragraph subtitle = new Paragraph("This is to certify that", contentFont);
-            subtitle.setAlignment(Element.ALIGN_CENTER);
-            subtitle.setSpacingAfter(10);
-            document.add(subtitle);
-
-            Paragraph name = new Paragraph(student.getName(), new Font(Font.HELVETICA, 20, Font.BOLD, Color.BLACK));
-            name.setAlignment(Element.ALIGN_CENTER);
-            name.setSpacingAfter(20);
-            document.add(name);
-
-            Paragraph text = new Paragraph("Has successfully attended the webinar on", contentFont);
-            text.setAlignment(Element.ALIGN_CENTER);
-            document.add(text);
-
-            Paragraph webinarTitle = new Paragraph(webinar.getTitle(), new Font(Font.HELVETICA, 18, Font.BOLD, Color.DARK_GRAY));
-            webinarTitle.setAlignment(Element.ALIGN_CENTER);
-            webinarTitle.setSpacingBefore(10);
-            webinarTitle.setSpacingAfter(10);
-            document.add(webinarTitle);
-            
-            Paragraph date = new Paragraph("Conducted on " + webinar.getStartDate().toLocalDate(), contentFont);
-            date.setAlignment(Element.ALIGN_CENTER);
-            document.add(date);
-
-            Paragraph speaker = new Paragraph("Speaker: " + webinar.getSpeakerName(), contentFont);
-            speaker.setAlignment(Element.ALIGN_CENTER);
-            speaker.setSpacingBefore(20);
-            document.add(speaker);
-
-            document.close();
-            return out.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate PDF", e);
-        }
-    }
 
     @Override
     public String joinWebinar(String userId, String webinarId) {
@@ -402,8 +345,29 @@ public class WebinarServiceImpl implements WebinarService {
             registrationRepository.save(reg);
             
             activityService.logActivity(userId, "WEBINAR_JOINED", "Joined webinar: " + webinar.getTitle(), webinarId, webinar.getTitle());
+
+            // Auto-generate certificate for participation
+            certificateService.generateCertificate(userId, webinarId, "WEBINAR", "PARTICIPANT");
         }
         
         return webinar.getMeetingLink();
+    }
+
+    @Override
+    public String generateCertificate(String userId, String webinarId) {
+        CertificateDto cert = certificateService.generateCertificate(userId, webinarId, "WEBINAR", "PARTICIPANT");
+        return cert.getCertificateId();
+    }
+
+    @Override
+    public byte[] downloadCertificate(String userId, String webinarId) {
+        // Find certificate for this user and webinar
+        List<CertificateDto> certs = certificateService.getUserCertificates(userId);
+        CertificateDto cert = certs.stream()
+                .filter(c -> webinarId.equals(c.getEventId()) && "WEBINAR".equals(c.getCategory()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Certificate not found for this webinar"));
+        
+        return certificateService.downloadCertificatePdf(cert.getId(), userId);
     }
 }

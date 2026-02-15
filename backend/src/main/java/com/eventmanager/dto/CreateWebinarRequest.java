@@ -17,6 +17,7 @@ public class CreateWebinarRequest {
     private Integer duration;
     private Integer maxParticipants;
     private String bannerImage;
+    private String agenda;
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -42,4 +43,6 @@ public class CreateWebinarRequest {
     public void setMaxParticipants(Integer maxParticipants) { this.maxParticipants = maxParticipants; }
     public String getBannerImage() { return bannerImage; }
     public void setBannerImage(String bannerImage) { this.bannerImage = bannerImage; }
+    public String getAgenda() { return agenda; }
+    public void setAgenda(String agenda) { this.agenda = agenda; }
 }

@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.dto.ClubDto;
 import com.eventmanager.model.*;
 import com.eventmanager.repository.CollegeRepository;
@@ -25,20 +26,20 @@ public class ClubController {
     private UserRepository userRepository;
 
     @GetMapping
-    public List<ClubDto> getAllClubs() {
-        return clubService.getAllClubs().stream().map(this::convertToDto).collect(Collectors.toList());
+    public ResponseEntity<ApiResponse<List<ClubDto>>> getAllClubs() {
+        return ResponseEntity.ok(ApiResponse.success(clubService.getAllClubs().stream().map(this::convertToDto).collect(Collectors.toList())));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClubDto> getClubById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<ClubDto>> getClubById(@PathVariable String id) {
         return clubService.getClubById(id)
                 .map(this::convertToDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(dto -> ResponseEntity.ok(ApiResponse.success(dto)))
+                .orElse(ResponseEntity.status(404).body(ApiResponse.error("Club not found")));
     }
 
     @PostMapping
-    public ResponseEntity<ClubDto> createClub(@RequestBody ClubDto clubDto) {
+    public ResponseEntity<ApiResponse<ClubDto>> createClub(@RequestBody ClubDto clubDto) {
         Club club = new Club();
         club.setName(clubDto.getName());
         club.setDescription(clubDto.getDescription());
@@ -65,7 +66,7 @@ public class ClubController {
         }
 
         Club savedClub = clubService.createClub(club);
-        return ResponseEntity.ok(convertToDto(savedClub));
+        return ResponseEntity.ok(ApiResponse.success(convertToDto(savedClub)));
     }
 
     // Helper method to convert Entity to DTO
@@ -102,84 +103,84 @@ public class ClubController {
 
     // Announcements
     @PostMapping("/{id}/announcements")
-    public ResponseEntity<ClubAnnouncement> createAnnouncement(
+    public ResponseEntity<ApiResponse<ClubAnnouncement>> createAnnouncement(
             @PathVariable String id,
             @RequestParam String authorId,
             @RequestParam String title,
             @RequestParam String content) {
-        return ResponseEntity.ok(clubService.createAnnouncement(id, authorId, title, content));
+        return ResponseEntity.ok(ApiResponse.success(clubService.createAnnouncement(id, authorId, title, content)));
     }
 
     @GetMapping("/{id}/announcements")
-    public ResponseEntity<List<ClubAnnouncement>> getClubAnnouncements(@PathVariable String id) {
-        return ResponseEntity.ok(clubService.getClubAnnouncements(id));
+    public ResponseEntity<ApiResponse<List<ClubAnnouncement>>> getClubAnnouncements(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(clubService.getClubAnnouncements(id)));
     }
 
     // Memberships
     @PostMapping("/{id}/join-legacy")
-    public ResponseEntity<ClubMembership> joinClubLegacy(@PathVariable String id, @RequestParam String userId) {
-        return ResponseEntity.ok(clubService.joinClub(id, userId));
+    public ResponseEntity<ApiResponse<ClubMembership>> joinClubLegacy(@PathVariable String id, @RequestParam String userId) {
+        return ResponseEntity.ok(ApiResponse.success(clubService.joinClub(id, userId)));
     }
 
     @GetMapping("/{id}/members")
-    public ResponseEntity<List<ClubMembership>> getClubMembers(@PathVariable String id) {
-        return ResponseEntity.ok(clubService.getClubMembers(id));
+    public ResponseEntity<ApiResponse<List<ClubMembership>>> getClubMembers(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(clubService.getClubMembers(id)));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ClubMembership>> getUserClubs(@PathVariable String userId) {
-        return ResponseEntity.ok(clubService.getUserClubs(userId));
+    public ResponseEntity<ApiResponse<List<ClubMembership>>> getUserClubs(@PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.success(clubService.getUserClubs(userId)));
     }
 
     @PutMapping("/memberships/{membershipId}/role")
-    public ResponseEntity<Void> updateMembershipRole(@PathVariable String membershipId, @RequestParam String role) {
+    public ResponseEntity<ApiResponse<Void>> updateMembershipRole(@PathVariable String membershipId, @RequestParam String role) {
         if (membershipId != null && role != null) {
             clubService.updateMembershipRole(membershipId, role);
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Role updated successfully", null));
     }
 
     // Recruitment Notices
     @PostMapping("/{id}/recruitments")
-    public ResponseEntity<RecruitmentNotice> createRecruitment(
+    public ResponseEntity<ApiResponse<RecruitmentNotice>> createRecruitment(
             @PathVariable String id,
             @RequestParam String title,
             @RequestParam String description,
             @RequestParam String role,
             @RequestParam String requirements,
             @RequestParam String deadline) {
-        return ResponseEntity.ok(clubService.createRecruitmentNotice(id, title, description, role, requirements,
-                java.time.LocalDateTime.parse(deadline)));
+        return ResponseEntity.ok(ApiResponse.success(clubService.createRecruitmentNotice(id, title, description, role, requirements,
+                java.time.LocalDateTime.parse(deadline))));
     }
 
     @GetMapping("/{id}/recruitments")
-    public ResponseEntity<List<RecruitmentNotice>> getClubRecruitments(@PathVariable String id) {
-        return ResponseEntity.ok(clubService.getClubRecruitmentNotices(id));
+    public ResponseEntity<ApiResponse<List<RecruitmentNotice>>> getClubRecruitments(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(clubService.getClubRecruitmentNotices(id)));
     }
 
     @GetMapping("/recruitments/open")
-    public ResponseEntity<List<RecruitmentNotice>> getAllOpenRecruitments() {
-        return ResponseEntity.ok(clubService.getAllOpenRecruitments());
+    public ResponseEntity<ApiResponse<List<RecruitmentNotice>>> getAllOpenRecruitments() {
+        return ResponseEntity.ok(ApiResponse.success(clubService.getAllOpenRecruitments()));
     }
 
     // Join Requests
     @PostMapping("/{id}/join-requests")
-    public ResponseEntity<ClubJoinRequest> submitJoinRequest(
+    public ResponseEntity<ApiResponse<ClubJoinRequest>> submitJoinRequest(
             @PathVariable String id,
             @RequestParam String userId,
             @RequestBody String message) {
-        return ResponseEntity.ok(clubService.submitJoinRequest(id, userId, message));
+        return ResponseEntity.ok(ApiResponse.success(clubService.submitJoinRequest(id, userId, message)));
     }
 
     @GetMapping("/{id}/join-requests")
-    public ResponseEntity<List<ClubJoinRequest>> getClubJoinRequests(@PathVariable String id) {
-        return ResponseEntity.ok(clubService.getClubJoinRequests(id));
+    public ResponseEntity<ApiResponse<List<ClubJoinRequest>>> getClubJoinRequests(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(clubService.getClubJoinRequests(id)));
     }
 
     @PutMapping("/join-requests/{requestId}/status")
-    public ResponseEntity<ClubJoinRequest> updateJoinRequestStatus(
+    public ResponseEntity<ApiResponse<ClubJoinRequest>> updateJoinRequestStatus(
             @PathVariable String requestId,
             @RequestParam String status) {
-        return ResponseEntity.ok(clubService.updateJoinRequestStatus(requestId, status));
+        return ResponseEntity.ok(ApiResponse.success(clubService.updateJoinRequestStatus(requestId, status)));
     }
 }

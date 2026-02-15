@@ -18,85 +18,83 @@ public class WebinarController {
     }
 
     @GetMapping
-    public List<WebinarDto> getAllWebinars(@RequestParam(required = false) String userId) {
-        return webinarService.getAllWebinars(userId);
+    public ResponseEntity<ApiResponse<List<WebinarDto>>> getAllWebinars(@RequestParam(required = false) String userId) {
+        return ResponseEntity.ok(ApiResponse.success(webinarService.getAllWebinars(userId)));
     }
 
     @GetMapping("/{id}")
-    public WebinarDto getWebinar(@PathVariable String id, @RequestParam(required = false) String userId) {
-        return webinarService.getWebinar(id, userId);
+    public ResponseEntity<ApiResponse<WebinarDto>> getWebinar(@PathVariable String id, @RequestParam(required = false) String userId) {
+        return ResponseEntity.ok(ApiResponse.success(webinarService.getWebinar(id, userId)));
     }
 
     @PostMapping("/create")
-    public ResponseEntity<WebinarDto> createWebinar(@RequestParam String userId, @RequestBody CreateWebinarRequest request) {
-        return ResponseEntity.ok(webinarService.createWebinar(userId, request));
+    public ResponseEntity<ApiResponse<WebinarDto>> createWebinar(@RequestParam String userId, @RequestBody CreateWebinarRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(webinarService.createWebinar(userId, request)));
     }
 
     @PutMapping("/{id}/update")
-    public ResponseEntity<WebinarDto> updateWebinar(@PathVariable String id, @RequestBody CreateWebinarRequest request) {
-        return ResponseEntity.ok(webinarService.updateWebinar(id, request));
+    public ResponseEntity<ApiResponse<WebinarDto>> updateWebinar(@PathVariable String id, @RequestBody CreateWebinarRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(webinarService.updateWebinar(id, request)));
     }
 
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelWebinar(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> cancelWebinar(@PathVariable String id) {
         webinarService.cancelWebinar(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Webinar cancelled successfully", null));
     }
 
     @DeleteMapping("/{id}/delete")
-    public ResponseEntity<?> deleteWebinar(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteWebinar(@PathVariable String id) {
         webinarService.deleteWebinar(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Webinar deleted successfully", null));
     }
 
     @PostMapping("/{id}/register")
-    public ResponseEntity<?> register(@PathVariable String id, @RequestParam String userId) {
+    public ResponseEntity<ApiResponse<Void>> register(@PathVariable String id, @RequestParam String userId) {
         webinarService.registerForWebinar(userId, id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Registered successfully", null));
+    }
+
+    @DeleteMapping("/{id}/unregister")
+    public ResponseEntity<ApiResponse<Void>> unregister(@PathVariable String id, @RequestParam String userId) {
+        webinarService.unregisterForWebinar(userId, id);
+        return ResponseEntity.ok(ApiResponse.success("Unregistered successfully", null));
     }
 
     @GetMapping("/student/my")
-    public List<WebinarRegistrationDto> getMyRegistrations(@RequestParam String userId) {
-        return webinarService.getStudentRegistrations(userId);
+    public ResponseEntity<ApiResponse<List<WebinarRegistrationDto>>> getMyRegistrations(@RequestParam String userId) {
+        return ResponseEntity.ok(ApiResponse.success(webinarService.getStudentRegistrations(userId)));
+    }
+
+    // Duplicate endpoint alias for frontend compatibility
+    @GetMapping("/api/student/webinars")
+    public ResponseEntity<ApiResponse<List<WebinarRegistrationDto>>> getStudentWebinars(@RequestParam String userId) {
+        return ResponseEntity.ok(ApiResponse.success(webinarService.getStudentRegistrations(userId)));
     }
 
     @PostMapping("/{id}/feedback")
-    public ResponseEntity<?> submitFeedback(@PathVariable String id, @RequestParam String userId, @RequestBody Map<String, Object> payload) {
+    public ResponseEntity<ApiResponse<Void>> submitFeedback(@PathVariable String id, @RequestParam String userId, @RequestBody Map<String, Object> payload) {
         Integer rating = (Integer) payload.get("rating");
         String comment = (String) payload.get("comment");
         webinarService.submitFeedback(userId, id, rating, comment);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Feedback submitted", null));
     }
 
     @GetMapping("/analytics")
-    public Map<String, Object> getAnalytics() {
-        return webinarService.getAnalytics();
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAnalytics() {
+        return ResponseEntity.ok(ApiResponse.success(webinarService.getAnalytics()));
     }
 
-    @PostMapping("/{id}/certificate")
-    public ResponseEntity<?> generateCertificate(@PathVariable String id, @RequestParam String userId) {
-        String url = webinarService.generateCertificate(userId, id);
-        return ResponseEntity.ok(Map.of("message", "Certificate generated successfully", "url", url));
-    }
-
-    @GetMapping("/{id}/certificate/download")
-    public ResponseEntity<byte[]> downloadCertificate(@PathVariable String id, @RequestParam String userId) {
-        byte[] pdfBytes = webinarService.downloadCertificate(userId, id);
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=certificate.pdf")
-                .header("Content-Type", "application/pdf")
-                .body(pdfBytes);
-    }
 
     @PostMapping("/{id}/join")
-    public ResponseEntity<?> joinWebinar(@PathVariable String id, @RequestParam String userId) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> joinWebinar(@PathVariable String id, @RequestParam String userId) {
         String meetingLink = webinarService.joinWebinar(userId, id);
-        return ResponseEntity.ok(Map.of("message", "Joined successfully", "url", meetingLink));
+        return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Joined successfully", "url", meetingLink)));
     }
 
     @PostMapping("/seed")
-    public ResponseEntity<?> seed() {
+    public ResponseEntity<ApiResponse<Map<String, String>>> seed() {
         webinarService.seedWebinars();
-        return ResponseEntity.ok(Map.of("message", "Seeded 25 webinars"));
+        return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Seeded 25 webinars")));
     }
 }

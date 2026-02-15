@@ -26,4 +26,22 @@ public class ClubJoinRequest {
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public Club getClub() { return club; }
+    public void setClub(Club club) { this.club = club; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

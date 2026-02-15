@@ -8,12 +8,17 @@ import com.eventmanager.model.HackathonResult;
 import java.util.List;
 import java.util.Optional;
 
-public interface HackathonService {
-    Hackathon createHackathon(Hackathon hackathon);
+    import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.Pageable;
 
-    Optional<Hackathon> getHackathonById(String id);
+    public interface HackathonService {
+        Hackathon createHackathon(Hackathon hackathon);
 
-    List<Hackathon> getAllHackathons();
+        Optional<Hackathon> getHackathonById(String id);
+
+        List<Hackathon> getAllHackathons();
+        
+        Page<Hackathon> getHackathons(String search, String country, String mode, String status, List<String> tags, Pageable pageable);
 
     List<Hackathon> getHackathonsByStudent(String userId);
 
@@ -46,4 +51,6 @@ public interface HackathonService {
 
     // Recommendations
     List<Hackathon> getRecommendations(String userId);
+
+    void seedStudentRegistrations(String userId);
 }

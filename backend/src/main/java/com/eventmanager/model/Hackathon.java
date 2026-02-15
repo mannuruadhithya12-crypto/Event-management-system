@@ -8,7 +8,11 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "hackathons")
+@Table(name = "hackathons", indexes = {
+    @Index(name = "idx_hackathon_status", columnList = "status"),
+    @Index(name = "idx_hackathon_country", columnList = "country"),
+    @Index(name = "idx_hackathon_mode", columnList = "mode")
+})
 public class Hackathon {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -21,4 +21,28 @@ public class UserBadge {
     private Badge badge;
 
     private LocalDateTime awardedAt = LocalDateTime.now();
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public Badge getBadge() { return badge; }
+    public void setBadge(Badge badge) { this.badge = badge; }
+
+    public String getBadgeId() { return badge == null ? null : badge.getId(); }
+    public void setBadgeId(String badgeId) { /* Derived */ }
+
+    public String getName() { return badge == null ? null : badge.getName(); }
+    public void setName(String name) { /* Derived */ }
+
+    public String getIcon() { return badge == null ? null : badge.getIconUrl(); }
+    public void setIcon(String icon) { /* Derived */ }
+
+    public String getDescription() { return badge == null ? null : badge.getDescription(); }
+    public void setDescription(String description) { /* Derived */ }
+
+    public LocalDateTime getAwardedAt() { return awardedAt; }
+    public void setAwardedAt(LocalDateTime awardedAt) { this.awardedAt = awardedAt; }
 }

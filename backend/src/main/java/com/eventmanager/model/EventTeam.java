@@ -29,4 +29,22 @@ public class EventTeam {
     private User assignedBy;
 
     private LocalDateTime assignedAt = LocalDateTime.now();
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public Event getEvent() { return event; }
+    public void setEvent(Event event) { this.event = event; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public TeamRole getRole() { return role; }
+    public void setRole(TeamRole role) { this.role = role; }
+
+    public User getAssignedBy() { return assignedBy; }
+    public void setAssignedBy(User assignedBy) { this.assignedBy = assignedBy; }
+
+    public LocalDateTime getAssignedAt() { return assignedAt; }
+    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
 }

@@ -4,12 +4,15 @@ import { Search, Filter, Calendar, Clock, MapPin, Users, Video, User, ChevronRig
 import { webinarApi } from '@/lib/api';
 import type { Webinar } from '@/types';
 import { useAuthStore } from '@/store';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export default function WebinarsPage() {
     const { user } = useAuthStore();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isMyRegistrationsView = location.pathname.includes('/my-registrations');
+
     const [webinars, setWebinars] = useState<Webinar[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -41,8 +44,9 @@ export default function WebinarsPage() {
 
         const matchesMode = filterMode === 'all' || (webinar.mode || '').toLowerCase() === filterMode.toLowerCase();
         const matchesStatus = filterStatus === 'all' || (webinar.status || '').toLowerCase() === filterStatus.toLowerCase();
+        const matchesView = !isMyRegistrationsView || webinar.isRegistered;
 
-        return matchesSearch && matchesMode && matchesStatus;
+        return matchesSearch && matchesMode && matchesStatus && matchesView;
     });
 
     const getStatusColor = (status: string) => {
@@ -70,6 +74,24 @@ export default function WebinarsPage() {
         show: { opacity: 1, y: 0 }
     };
 
+    const WebinarSkeleton = () => (
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden animate-pulse">
+            <div className="h-48 bg-slate-700/50" />
+            <div className="p-5 space-y-4">
+                <div className="h-6 bg-slate-700/50 rounded w-3/4" />
+                <div className="h-4 bg-slate-700/50 rounded w-1/2" />
+                <div className="space-y-2">
+                    <div className="h-4 bg-slate-700/50 rounded w-full" />
+                    <div className="h-4 bg-slate-700/50 rounded w-full" />
+                </div>
+                <div className="pt-4 border-t border-slate-700/50 flex justify-between">
+                    <div className="h-8 bg-slate-700/50 rounded w-20" />
+                    <div className="h-8 bg-slate-700/50 rounded w-24" />
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="space-y-8">
             {/* Header Section */}
@@ -84,17 +106,17 @@ export default function WebinarsPage() {
                 </div>
                 <div className="flex gap-3">
                     <Link
-                        to="/student/webinars/my"
+                        to={isMyRegistrationsView ? "/dashboard/webinars" : "/dashboard/webinars/my-registrations"}
                         className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all border border-slate-700"
                     >
-                        My Registrations
+                        {isMyRegistrationsView ? 'View All Webinars' : 'My Registrations'}
                     </Link>
                     {user?.role === 'college_admin' && (
                         <Link
-                            to="/admin/webinars/create"
+                            to="/dashboard/college-admin/webinars/create"
                             className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
                         >
-                            Create All
+                            Create Webinar
                         </Link>
                     )}
                 </div>
@@ -143,8 +165,8 @@ export default function WebinarsPage() {
 
             {/* Webinar Grid */}
             {loading ? (
-                <div className="flex justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map((i) => <WebinarSkeleton key={i} />)}
                 </div>
             ) : (
                 <motion.div
@@ -210,10 +232,13 @@ export default function WebinarsPage() {
                                         </div>
 
                                         <button
-                                            onClick={() => navigate(`/student/webinars/${webinar.id}`)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all text-sm font-medium"
+                                            onClick={() => navigate(`/dashboard/webinars/${webinar.id}`)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-medium ${webinar.status === 'ONGOING' && webinar.isRegistered
+                                                    ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 animate-bounce'
+                                                    : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white'
+                                                }`}
                                         >
-                                            View Details
+                                            {webinar.status === 'ONGOING' && webinar.isRegistered ? 'Join Now' : 'View Details'}
                                             <ChevronRight className="w-4 h-4" />
                                         </button>
                                     </div>

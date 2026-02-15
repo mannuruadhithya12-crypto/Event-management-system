@@ -137,7 +137,8 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false
           });
         } catch (error: any) {
-          set({ isLoading: false });
+          set({ isLoading: false, isAuthenticated: false, user: null, token: null });
+          console.error('[Auth Error]:', error);
           throw error;
         }
       },
@@ -182,7 +183,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated
+      }),
     }
   )
 );

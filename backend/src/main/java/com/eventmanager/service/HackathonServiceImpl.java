@@ -60,6 +60,27 @@ public class HackathonServiceImpl implements HackathonService {
     }
 
     @Override
+    public org.springframework.data.domain.Page<Hackathon> getHackathons(String search, String country, String mode, String status, List<String> tags, org.springframework.data.domain.Pageable pageable) {
+        return hackathonRepository.findAll((root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            if (search != null && !search.isEmpty()) {
+                String likeSearch = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("title")), likeSearch));
+            }
+            if (country != null && !country.isEmpty()) {
+                predicates.add(cb.equal(cb.lower(root.get("country")), country.toLowerCase()));
+            }
+            if (mode != null && !mode.isEmpty()) {
+                predicates.add(cb.equal(cb.lower(root.get("mode")), mode.toLowerCase()));
+            }
+            if (status != null && !status.isEmpty()) {
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        }, pageable);
+    }
+
+    @Override
     public List<Hackathon> getHackathonsByStudent(String userId) {
         return teamMemberRepository.findByUserId(userId).stream()
                 .map(tm -> tm.getTeam().getHackathon())
@@ -208,13 +229,13 @@ public class HackathonServiceImpl implements HackathonService {
             members.forEach(member -> {
                 // Participation certificate for everyone
                 certificateService.generateHackathonCertificate(
-                        member.getUser().getId(), hackathonId, "participation", null);
+                        member.getUser().getId(), hackathonId, "HACKATHON", "PARTICIPANT");
 
                 // Winner certificate if applicable
                 if (teamResult.isPresent()) {
                     certificateService.generateHackathonCertificate(
-                            member.getUser().getId(), hackathonId, "winner",
-                            teamResult.get().getRankPoint().toString());
+                            member.getUser().getId(), hackathonId, "HACKATHON",
+                            "WINNER_RANK_" + teamResult.get().getRankPoint());
                 }
 
                 notificationService.createNotification(member.getUser().getId(), "Results Published",
@@ -233,9 +254,35 @@ public class HackathonServiceImpl implements HackathonService {
         // Simple logic: return some hackathons that the user is not part of
         // In production, this would use ML models or skill matching
         List<Hackathon> all = hackathonRepository.findAll();
+        // Return 3 random hackathons (simplified) for recommendation
         return all.stream()
                 .filter(h -> !"COMPLETED".equals(h.getStatus()))
                 .limit(3)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public void seedStudentRegistrations(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Hackathon> hackathons = hackathonRepository.findAll();
+        if (hackathons.isEmpty()) return;
+
+        // Register for first 3 hackathons if not already registered
+        int count = 0;
+        for (Hackathon h : hackathons) {
+            if (count >= 3) break;
+            
+            Optional<Team> existing = getTeamByUser(h.getId(), userId);
+            if (existing.isEmpty() && !"COMPLETED".equalsIgnoreCase(h.getStatus())) {
+                try {
+                    createTeam(h.getId(), user.getName() + "'s Team for " + h.getTitle(), userId);
+                    count++;
+                } catch (Exception e) {
+                    System.err.println("Failed to seed registration for hackathon " + h.getId() + ": " + e.getMessage());
+                }
+            }
+        }
     }
 }

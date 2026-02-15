@@ -24,27 +24,77 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-        ...options,
-        headers,
-    });
+    // Add timeout support
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-    if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        let errorMessage = `API Error: ${response.status}`;
+    try {
+        const response = await fetch(`${BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+            signal: controller.signal,
+        });
+        clearTimeout(id);
 
-        try {
-            const errorJson = JSON.parse(errorText);
-            errorMessage = errorJson.message || errorText || errorMessage;
-        } catch (e) {
-            errorMessage = errorText || errorMessage;
+        if (response.status === 401) {
+            // Auto-logout on 401
+            localStorage.removeItem('auth-storage');
+            window.location.href = '/login';
+            throw new Error('Session expired. Please login again.');
         }
 
-        throw new Error(errorMessage);
-    }
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => '');
+            let errorMessage = `API Error: ${response.status}`;
 
-    return response.json();
+            try {
+                const errorJson = JSON.parse(errorText);
+                // Handle ApiResponse error format
+                if (errorJson.message) {
+                    errorMessage = errorJson.message;
+                } else if (errorJson.error) {
+                    errorMessage = errorJson.error;
+                }
+            } catch (e) {
+                errorMessage = errorText || errorMessage;
+            }
+
+            throw new Error(errorMessage);
+        }
+
+        // Parse JSON
+        const data = await response.json();
+
+        // Check for ApiResponse wrapper
+        if (data && typeof data === 'object' && 'success' in data) {
+            if (data.success) {
+                return data.data;
+            } else {
+                throw new Error(data.message || 'API Error');
+            }
+        }
+
+        // Return raw data if not wrapped (backward compatibility or external APIs)
+        return data;
+    } catch (error: any) {
+        clearTimeout(id);
+        if (error.name === 'AbortError') {
+            throw new Error('Request timed out');
+        }
+        throw error;
+    }
 }
+
+export const supportApi = {
+    create: (data: any) => api.post<any>(`/support/create?userId=${data.userId}`, data),
+    getUserTickets: (userId: string) => api.get<any[]>(`/support/user/${userId}`),
+    getAllTickets: () => api.get<any[]>('/support/all'),
+    getTicketDetails: (ticketId: string) => api.get<any>(`/support/${ticketId}`),
+    addReply: (ticketId: string, userId: string, data: any) => api.post<any>(`/support/${ticketId}/reply?userId=${userId}`, data),
+    updateStatus: (ticketId: string, status: string, userId: string) => api.put<any>(`/support/${ticketId}/status?status=${status}&userId=${userId}`, {}),
+    getFAQs: () => api.get<any[]>('/support/faqs'),
+    createFAQ: (data: any) => api.post<any>('/support/faqs', data)
+};
 
 export const api = {
     get: <T>(endpoint: string) => fetchAPI<T>(endpoint, { method: 'GET' }),
@@ -112,6 +162,20 @@ export const eventTeamApi = {
     addMember: (eventId: string, data: { userId: string; role: string }) => api.post<any>(`/events/${eventId}/team`, data),
     removeMember: (eventId: string, userId: string) => api.delete<any>(`/events/${eventId}/team/${userId}`),
 };
+
+export const eventApi = {
+    getAll: async () => {
+        const response: any = await api.get<any>('/events');
+        return response.content || response;
+    },
+    getById: (id: string) => api.get<any>(`/events/${id}`),
+    create: (data: any) => api.post<any>('/events', data),
+    register: (id: string, userId: string) => api.post<any>(`/events/${id}/register?userId=${userId}`, {}),
+    unregister: (id: string, userId: string) => api.post<any>(`/events/${id}/unregister?userId=${userId}`, {}),
+    getStudentEvents: (userId: string) => api.get<any[]>(`/events/student/${userId}`),
+    getOrganizerEvents: (organizerId: string) => api.get<any[]>(`/events/organizer/${organizerId}`),
+    seedRegistrations: (userId: string) => api.post<any>(`/events/seed-registrations?userId=${userId}`, {}),
+};
 export const webinarApi = {
     getAll: (userId?: string) => api.get<Webinar[]>(`/webinars${userId ? `?userId=${userId}` : ''}`),
     getById: (id: string, userId?: string) => api.get<Webinar>(`/webinars/${id}${userId ? `?userId=${userId}` : ''}`),
@@ -120,11 +184,14 @@ export const webinarApi = {
     cancel: (id: string) => api.post<void>(`/webinars/${id}/cancel`, {}),
     delete: (id: string) => api.delete<void>(`/webinars/${id}/delete`),
     register: (id: string, userId: string) => api.post<void>(`/webinars/${id}/register?userId=${userId}`, {}),
+    unregister: (id: string, userId: string) => api.delete<void>(`/webinars/${id}/unregister?userId=${userId}`),
     join: (id: string, userId: string) => api.post<{ url: string }>(`/webinars/${id}/join?userId=${userId}`, {}),
     getMyRegistrations: (userId: string) => api.get<WebinarRegistration[]>(`/webinars/student/my?userId=${userId}`),
+    getMyRegistrationsNew: (userId: string) => api.get<WebinarRegistration[]>(`/webinars/api/student/webinars?userId=${userId}`),
     submitFeedback: (id: string, userId: string, data: { rating: number; comment: string }) =>
         api.post<void>(`/webinars/${id}/feedback?userId=${userId}`, data),
     generateCertificate: (id: string, userId: string) => api.post<{ url: string }>(`/webinars/${id}/certificate?userId=${userId}`, {}),
+    generateCertificateBlob: (id: string, userId: string) => api.getBlob(`/webinars/${id}/certificate/download?userId=${userId}`),
     getAnalytics: () => api.get<any>('/webinars/analytics'),
     seed: () => api.post<any>('/webinars/seed', {}),
 };
@@ -167,9 +234,11 @@ export const hackathonApi = {
 };
 
 export const certificateApi = {
-    getUserCertificates: (userId: string) => api.get<any[]>(`/certificates/user/${userId}`),
-    download: (id: string) => api.getBlob(`/certificates/${id}/download`),
-    verify: (number: string) => api.get<{ verified: boolean }>(`/certificates/verify/${number}`),
+    getUserCertificates: (userId: string) => api.get<any[]>(`/student/certificates?userId=${userId}`),
+    getById: (id: string, userId: string) => api.get<any>(`/certificates/${id}?userId=${userId}`),
+    download: (id: string, userId: string) => api.getBlob(`/certificates/${id}/download?userId=${userId}`),
+    verify: (certificateId: string) => api.get<any>(`/certificates/verify/${certificateId}`),
+    seed: (userId: string) => api.post<string>(`/certificates/seed?userId=${userId}`, {}),
 };
 
 export const notificationApi = {

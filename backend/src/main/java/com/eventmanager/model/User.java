@@ -6,11 +6,15 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_email", columnList = "email", unique = true)
+})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+    private String firstName;
+    private String lastName;
     private String name;
     private String email;
     private String password;
@@ -37,6 +41,10 @@ public class User {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getEmail() { return email; }

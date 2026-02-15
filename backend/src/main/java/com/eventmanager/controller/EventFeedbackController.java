@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.model.Event;
 import com.eventmanager.model.EventFeedback;
 import com.eventmanager.model.User;
@@ -25,7 +26,7 @@ public class EventFeedbackController {
     private UserRepository userRepository;
 
     @PostMapping("/event")
-    public ResponseEntity<?> submitFeedback(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<ApiResponse<String>> submitFeedback(@RequestBody Map<String, Object> payload) {
         String eventId = (String) payload.get("eventId");
         String userId = (String) payload.get("userId");
         Integer rating = payload.get("rating") != null ? ((Number) payload.get("rating")).intValue() : 0;
@@ -33,10 +34,10 @@ public class EventFeedbackController {
         String suggestions = (String) payload.get("suggestions");
 
         Event event = eventRepository.findById(eventId).orElse(null);
-        if (event == null) return ResponseEntity.badRequest().body("Event not found");
+        if (event == null) return ResponseEntity.badRequest().body(ApiResponse.error("Event not found"));
 
         User user = userRepository.findById(userId).orElse(null);
-        if (user == null) return ResponseEntity.badRequest().body("User not found");
+        if (user == null) return ResponseEntity.badRequest().body(ApiResponse.error("User not found"));
 
         EventFeedback feedback = new EventFeedback();
         feedback.setEvent(event);
@@ -47,6 +48,6 @@ public class EventFeedbackController {
         
         feedbackRepository.save(feedback); // Let entity set timestamp
 
-        return ResponseEntity.ok("Feedback submitted successfully");
+        return ResponseEntity.ok(ApiResponse.success("Feedback submitted successfully", "Feedback submitted successfully"));
     }
 }

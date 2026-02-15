@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.model.Badge;
 import com.eventmanager.model.UserBadge;
 import com.eventmanager.service.GamificationService;
@@ -10,25 +11,24 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/gamification")
-@CrossOrigin(origins = "*")
 public class GamificationController {
 
     @Autowired
     private GamificationService gamificationService;
 
     @PostMapping("/award")
-    public ResponseEntity<Void> awardBadge(@RequestParam String userId, @RequestParam String badgeName) {
+    public ResponseEntity<ApiResponse<Void>> awardBadge(@RequestParam String userId, @RequestParam String badgeName) {
         gamificationService.awardBadge(userId, badgeName);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Badge awarded", null));
     }
 
     @GetMapping("/badges/user/{userId}")
-    public ResponseEntity<List<UserBadge>> getUserBadges(@PathVariable String userId) {
-        return ResponseEntity.ok(gamificationService.getUserBadges(userId));
+    public ResponseEntity<ApiResponse<List<UserBadge>>> getUserBadges(@PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.success(gamificationService.getUserBadges(userId)));
     }
 
     @GetMapping("/badges")
-    public ResponseEntity<List<Badge>> getAllBadges() {
-        return ResponseEntity.ok(gamificationService.getAllBadges());
+    public ResponseEntity<ApiResponse<List<Badge>>> getAllBadges() {
+        return ResponseEntity.ok(ApiResponse.success(gamificationService.getAllBadges()));
     }
 }

@@ -54,11 +54,47 @@ public class Club {
     @Column(columnDefinition = "TEXT")
     private String achievements;
 
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getTags() { return tags; }
+    public void setTags(String tags) { this.tags = tags; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getAchievements() { return achievements; }
+    public void setAchievements(String achievements) { this.achievements = achievements; }
+
     @Column(nullable = false)
     private boolean isActive = true;
 
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean active) { isActive = active; }
+
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public College getCollege() { return college; }
+    public void setCollege(College college) { this.college = college; }
+
+    public User getFacultyAdvisor() { return facultyAdvisor; }
+    public void setFacultyAdvisor(User facultyAdvisor) { this.facultyAdvisor = facultyAdvisor; }
+
+    public User getPresident() { return president; }
+    public void setPresident(User president) { this.president = president; }
+
+    public String getBannerUrl() { return bannerUrl; }
+    public void setBannerUrl(String bannerUrl) { this.bannerUrl = bannerUrl; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     @PreUpdate
     public void onUpdate() {

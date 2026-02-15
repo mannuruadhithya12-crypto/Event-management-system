@@ -24,7 +24,9 @@ const LoginPage = () => {
       toast.success('Session authorized. Welcome back, agent.');
       navigate(from, { replace: true });
     } catch (error: any) {
-      toast.error(error.message || 'Authorization failed. Check credentials.');
+      console.error('[Login Error]:', error);
+      const message = error.response?.data?.message || error.message || 'Authorization failed. Check credentials.';
+      toast.error(message);
     }
   };
 

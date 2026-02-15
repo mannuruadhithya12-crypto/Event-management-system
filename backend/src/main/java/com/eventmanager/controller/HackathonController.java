@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.model.*;
 import com.eventmanager.repository.*;
 import com.eventmanager.service.HackathonService;
@@ -35,142 +36,149 @@ public class HackathonController {
     }
 
     @GetMapping
-    public List<Hackathon> getAllHackathons() {
-        return hackathonService.getAllHackathons();
+    public ResponseEntity<ApiResponse<List<Hackathon>>> getAllHackathons() {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getAllHackathons()));
     }
 
     @PostMapping
-    public Hackathon createHackathon(@RequestBody Hackathon hackathon) {
-        return hackathonService.createHackathon(hackathon);
+    public ResponseEntity<ApiResponse<Hackathon>> createHackathon(@RequestBody Hackathon hackathon) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.createHackathon(hackathon)));
     }
 
     @GetMapping("/student/{userId}")
-    public List<Hackathon> getHackathonsByStudent(@PathVariable String userId) {
-        return hackathonService.getHackathonsByStudent(userId);
+    public ResponseEntity<ApiResponse<List<Hackathon>>> getHackathonsByStudent(@PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getHackathonsByStudent(userId)));
     }
 
     @GetMapping("/organizer/{organizerId}")
-    public List<Hackathon> getHackathonsByOrganizer(@PathVariable String organizerId) {
-        return hackathonService.getHackathonsByOrganizer(organizerId);
+    public ResponseEntity<ApiResponse<List<Hackathon>>> getHackathonsByOrganizer(@PathVariable String organizerId) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getHackathonsByOrganizer(organizerId)));
     }
 
     @GetMapping("/student/{userId}/registered")
-    public List<Hackathon> getRegisteredHackathons(@PathVariable String userId) {
-        return hackathonService.getRegisteredHackathons(userId);
+    public ResponseEntity<ApiResponse<List<Hackathon>>> getRegisteredHackathons(@PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getRegisteredHackathons(userId)));
     }
 
     @GetMapping("/student/{userId}/completed")
-    public List<Hackathon> getCompletedHackathons(@PathVariable String userId) {
-        return hackathonService.getCompletedHackathons(userId);
+    public ResponseEntity<ApiResponse<List<Hackathon>>> getCompletedHackathons(@PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getCompletedHackathons(userId)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Hackathon> getHackathonById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Hackathon>> getHackathonById(@PathVariable String id) {
         return hackathonService.getHackathonById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(h -> ResponseEntity.ok(ApiResponse.success(h)))
+                .orElse(ResponseEntity.status(404).body(ApiResponse.error("Hackathon not found")));
     }
 
     @GetMapping("/{id}/problem-statements")
-    public List<ProblemStatement> getProblemStatements(@PathVariable String id) {
-        return hackathonService.getProblemStatements(id);
+    public ResponseEntity<ApiResponse<List<ProblemStatement>>> getProblemStatements(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getProblemStatements(id)));
     }
 
     @PostMapping("/{id}/problem-statements")
-    public ProblemStatement addProblemStatement(@PathVariable String id, @RequestBody ProblemStatement problemStatement) {
-        return hackathonService.addProblemStatement(id, problemStatement);
+    public ResponseEntity<ApiResponse<ProblemStatement>> addProblemStatement(@PathVariable String id, @RequestBody ProblemStatement problemStatement) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.addProblemStatement(id, problemStatement)));
     }
 
     @PostMapping("/{id}/teams")
-    public Team createTeam(@PathVariable String id, @RequestBody Map<String, String> payload) {
-        return hackathonService.createTeam(id, payload.get("name"), payload.get("leaderId"));
+    public ResponseEntity<ApiResponse<Team>> createTeam(@PathVariable String id, @RequestBody Map<String, String> payload) {
+        try {
+            return ResponseEntity.ok(ApiResponse.success(hackathonService.createTeam(id, payload.get("name"), payload.get("leaderId"))));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @PostMapping("/{id}/teams/join")
-    public Team joinTeam(@PathVariable String id, @RequestBody Map<String, String> payload) {
-        return hackathonService.joinTeam(id, payload.get("userId"), payload.get("joinCode"));
+    public ResponseEntity<ApiResponse<Team>> joinTeam(@PathVariable String id, @RequestBody Map<String, String> payload) {
+        try {
+            return ResponseEntity.ok(ApiResponse.success(hackathonService.joinTeam(id, payload.get("userId"), payload.get("joinCode"))));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}/my-team")
-    public ResponseEntity<Team> getMyTeam(@PathVariable String id, @RequestParam String userId) {
+    public ResponseEntity<ApiResponse<Team>> getMyTeam(@PathVariable String id, @RequestParam String userId) {
         return hackathonService.getTeamByUser(id, userId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.noContent().build());
+                .map(t -> ResponseEntity.ok(ApiResponse.success(t)))
+                .orElse(ResponseEntity.ok(ApiResponse.success(null)));
     }
 
     @GetMapping("/teams/student/{userId}")
-    public List<Team> getTeamsByStudent(@PathVariable String userId) {
-        return hackathonService.getTeamsByStudent(userId);
+    public ResponseEntity<ApiResponse<List<Team>>> getTeamsByStudent(@PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getTeamsByStudent(userId)));
     }
 
     @GetMapping("/teams/{teamId}/members")
-    public List<TeamMember> getTeamMembers(@PathVariable String teamId) {
-        return hackathonService.getTeamMembers(teamId);
+    public ResponseEntity<ApiResponse<List<TeamMember>>> getTeamMembers(@PathVariable String teamId) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getTeamMembers(teamId)));
     }
 
     @GetMapping("/{id}/results")
-    public List<HackathonResult> getResults(@PathVariable String id) {
-        return hackathonService.getResults(id);
+    public ResponseEntity<ApiResponse<List<HackathonResult>>> getResults(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getResults(id)));
     }
 
     @PostMapping("/{id}/results")
-    public ResponseEntity<Void> publishResults(@PathVariable String id, @RequestBody List<HackathonResult> results) {
+    public ResponseEntity<ApiResponse<Void>> publishResults(@PathVariable String id, @RequestBody List<HackathonResult> results) {
         hackathonService.publishResults(id, results);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Results published successfully", null));
     }
 
     @GetMapping("/recommendations/{userId}")
-    public List<Hackathon> getRecommendations(@PathVariable String userId) {
-        return hackathonService.getRecommendations(userId);
+    public ResponseEntity<ApiResponse<List<Hackathon>>> getRecommendations(@PathVariable String userId) {
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getRecommendations(userId)));
     }
 
     @GetMapping("/filter")
-    public List<Hackathon> filterHackathons(
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<Hackathon>>> filterHackathons(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String country,
             @RequestParam(required = false) String mode,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) List<String> tags) {
-
-        List<Hackathon> all = hackathonRepository.findAll();
-
-        return all.stream()
-                .filter(h -> search == null || search.isEmpty() || h.getTitle().toLowerCase().contains(search.toLowerCase())
-                        || (h.getTags() != null && h.getTags().stream().anyMatch(t -> t.toLowerCase().contains(search.toLowerCase()))))
-                .filter(h -> country == null || country.isEmpty() || (h.getCountry() != null && h.getCountry().equalsIgnoreCase(country)))
-                .filter(h -> mode == null || mode.isEmpty() || (h.getMode() != null && h.getMode().equalsIgnoreCase(mode)))
-                .filter(h -> status == null || status.isEmpty() || (h.getStatus() != null && h.getStatus().equalsIgnoreCase(status)))
-                .filter(h -> tags == null || tags.isEmpty() || (h.getTags() != null && new HashSet<>(h.getTags()).containsAll(tags)))
-                .collect(Collectors.toList());
+            @RequestParam(required = false) List<String> tags,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return ResponseEntity.ok(ApiResponse.success(hackathonService.getHackathons(search, country, mode, status, tags, pageable)));
     }
 
     @PostMapping("/{id}/bookmark")
-    public ResponseEntity<?> toggleBookmark(@PathVariable String id, @RequestParam String userId) {
-        Hackathon hackathon = hackathonRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<ApiResponse<Map<String, String>>> toggleBookmark(@PathVariable String id, @RequestParam String userId) {
+        try {
+            Hackathon hackathon = hackathonRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        Optional<Bookmark> existing = bookmarkRepository.findByUserIdAndHackathonId(userId, id);
-        if (existing.isPresent()) {
-            bookmarkRepository.delete(existing.get());
-            return ResponseEntity.ok(Map.of("message", "removed"));
-        } else {
-            Bookmark b = new Bookmark();
-            b.setHackathon(hackathon);
-            b.setUser(user);
-            bookmarkRepository.save(b);
-            return ResponseEntity.ok(Map.of("message", "added"));
+            Optional<Bookmark> existing = bookmarkRepository.findByUserIdAndHackathonId(userId, id);
+            if (existing.isPresent()) {
+                bookmarkRepository.delete(existing.get());
+                return ResponseEntity.ok(ApiResponse.success(Map.of("message", "removed")));
+            } else {
+                Bookmark b = new Bookmark();
+                b.setHackathon(hackathon);
+                b.setUser(user);
+                bookmarkRepository.save(b);
+                return ResponseEntity.ok(ApiResponse.success(Map.of("message", "added")));
+            }
+        } catch (Exception e) {
+             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
     @GetMapping("/bookmarks")
-    public List<Hackathon> getBookmarks(@RequestParam String userId) {
-        return bookmarkRepository.findByUserId(userId).stream()
+    public ResponseEntity<ApiResponse<List<Hackathon>>> getBookmarks(@RequestParam String userId) {
+        List<Hackathon> bookmarks = bookmarkRepository.findByUserId(userId).stream()
                 .map(Bookmark::getHackathon)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(bookmarks));
     }
 
     @PostMapping("/seed")
-    public ResponseEntity<?> seedHackathons() {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> seedHackathons() {
         // Seed Users first if none exist
         if (userRepository.count() == 0) {
             com.eventmanager.model.User student = new com.eventmanager.model.User();
@@ -206,7 +214,7 @@ public class HackathonController {
             userRepository.save(john);
         }
 
-        if (hackathonRepository.count() > 5) return ResponseEntity.ok(Map.of("message", "Users seeded (if missing), Hackathons already seeded"));
+        if (hackathonRepository.count() > 5) return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Users seeded (if missing), Hackathons already seeded")));
 
         String[] titles = {"AI Revolution Hack", "Web3 Summit", "GreenTech Challenge", "FinTech Disrupt", "HealthHacks 2024"};
         String[] countries = {"India", "USA", "UK", "Canada", "Singapore"};
@@ -230,6 +238,16 @@ public class HackathonController {
             h.setRegistrationDeadline(LocalDate.now().plusDays(i * 2 - 1));
             hackathonRepository.save(h);
         }
-        return ResponseEntity.ok(Map.of("message", "Seeded 25 hackathons", "count", 25));
+        return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Seeded 25 hackathons", "count", 25)));
+    }
+
+    @PostMapping("/seed-registrations")
+    public ResponseEntity<ApiResponse<Map<String, String>>> seedRegistrations(@RequestParam String userId) {
+        try {
+            hackathonService.seedStudentRegistrations(userId);
+            return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Seeded registrations for user " + userId)));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

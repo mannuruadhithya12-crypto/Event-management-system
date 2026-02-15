@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.model.ForumComment;
 import com.eventmanager.model.ForumPost;
 import com.eventmanager.service.ForumService;
@@ -16,42 +17,48 @@ public class ForumController {
     private ForumService forumService;
 
     @PostMapping("/posts")
-    public ResponseEntity<ForumPost> createPost(@RequestBody com.eventmanager.dto.ForumPostRequest request) {
-        return ResponseEntity.ok(forumService.createPost(request.getAuthorId(), request.getTitle(), request.getContent(), request.getCategory()));
+    public ResponseEntity<ApiResponse<ForumPost>> createPost(@RequestBody com.eventmanager.dto.ForumPostRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(forumService.createPost(request.getAuthorId(), request.getTitle(), request.getContent(), request.getCategory())));
     }
 
     @GetMapping("/posts")
-    public ResponseEntity<List<ForumPost>> getAllPosts() {
-        return ResponseEntity.ok(forumService.getAllPosts());
+    public ResponseEntity<ApiResponse<List<ForumPost>>> getAllPosts() {
+        return ResponseEntity.ok(ApiResponse.success(forumService.getAllPosts()));
     }
 
     @GetMapping("/posts/category/{category}")
-    public ResponseEntity<List<ForumPost>> getPostsByCategory(@PathVariable String category) {
-        return ResponseEntity.ok(forumService.getPostsByCategory(category));
+    public ResponseEntity<ApiResponse<List<ForumPost>>> getPostsByCategory(@PathVariable String category) {
+        return ResponseEntity.ok(ApiResponse.success(forumService.getPostsByCategory(category)));
     }
 
     @GetMapping("/posts/{id}")
-    public ResponseEntity<ForumPost> getPostById(@PathVariable String id) {
-        return ResponseEntity.ok(forumService.getPostById(id));
+    public ResponseEntity<ApiResponse<ForumPost>> getPostById(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(forumService.getPostById(id)));
     }
 
     @PostMapping("/posts/{id}/upvote")
-    public ResponseEntity<ForumPost> upvotePost(@PathVariable String id) {
-        return ResponseEntity.ok(forumService.upvotePost(id));
+    public ResponseEntity<ApiResponse<ForumPost>> upvotePost(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(forumService.upvotePost(id)));
     }
 
     @PostMapping("/posts/{id}/downvote")
-    public ResponseEntity<ForumPost> downvotePost(@PathVariable String id) {
-        return ResponseEntity.ok(forumService.downvotePost(id));
+    public ResponseEntity<ApiResponse<ForumPost>> downvotePost(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(forumService.downvotePost(id)));
     }
 
     @PostMapping("/posts/{id}/comments")
-    public ResponseEntity<ForumComment> addComment(@PathVariable String id, @RequestBody com.eventmanager.dto.ForumCommentRequest request) {
-        return ResponseEntity.ok(forumService.addComment(id, request.getAuthorId(), request.getContent()));
+    public ResponseEntity<ApiResponse<ForumComment>> addComment(@PathVariable String id, @RequestBody com.eventmanager.dto.ForumCommentRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(forumService.addComment(id, request.getAuthorId(), request.getContent())));
     }
 
     @GetMapping("/posts/{id}/comments")
-    public ResponseEntity<List<ForumComment>> getComments(@PathVariable String id) {
-        return ResponseEntity.ok(forumService.getComments(id));
+    public ResponseEntity<ApiResponse<List<ForumComment>>> getComments(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(forumService.getComments(id)));
+    }
+
+    @PostMapping("/seed")
+    public ResponseEntity<ApiResponse<String>> seed() {
+        forumService.seedPosts();
+        return ResponseEntity.ok(ApiResponse.success("Forum seeded successfully", null));
     }
 }

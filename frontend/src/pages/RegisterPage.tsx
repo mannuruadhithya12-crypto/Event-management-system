@@ -99,7 +99,9 @@ const RegisterPage = () => {
       toast.success('Registration successful. Please login to continue.');
       navigate('/login');
     } catch (error: any) {
-      toast.error(error.message || 'Registration synthesis failed');
+      console.error('[Registration Error]:', error);
+      const message = error.response?.data?.message || error.message || 'Registration synthesis failed';
+      toast.error(message);
     }
   };
 

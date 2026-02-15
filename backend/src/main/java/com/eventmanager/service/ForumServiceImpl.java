@@ -91,4 +91,26 @@ public class ForumServiceImpl implements ForumService {
     public List<ForumComment> getComments(String postId) {
         return commentRepository.findByPostIdOrderByCreatedAtAsc(postId);
     }
+
+    @Override
+    public void seedPosts() {
+        if (postRepository.count() > 0) return;
+
+        User author = userRepository.findAll().stream().findFirst().orElse(null);
+        if (author == null) return;
+
+        String[] titles = {
+            "Best resources for learning React?",
+            "How to structure a Spring Boot project?",
+            "Hackathon team needed for AI challenge",
+            "What is the best way to deploy MERN stack?",
+            "Experience with Google Cloud vs AWS?"
+        };
+
+        String[] categories = {"General", "Technical", "Team Formation", "Career", "Showcase"};
+
+        for (int i = 0; i < titles.length; i++) {
+            createPost(author.getId(), titles[i], "I'm looking for some advice/help regarding " + titles[i], categories[i % categories.length]);
+        }
+    }
 }

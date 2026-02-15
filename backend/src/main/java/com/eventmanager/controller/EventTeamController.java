@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.dto.EventTeamMemberDto;
 import com.eventmanager.model.Event;
 import com.eventmanager.model.EventTeam;
@@ -31,14 +32,14 @@ public class EventTeamController {
     private UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<List<EventTeamMemberDto>> getTeamMembers(@PathVariable String eventId) {
+    public ResponseEntity<ApiResponse<List<EventTeamMemberDto>>> getTeamMembers(@PathVariable String eventId) {
         List<EventTeam> team = eventTeamRepository.findByEventId(eventId);
         List<EventTeamMemberDto> dtos = team.stream().map(this::convertToDto).collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(ApiResponse.success(dtos));
     }
 
     @PostMapping
-    public ResponseEntity<?> addTeamMember(
+    public ResponseEntity<ApiResponse<EventTeamMemberDto>> addTeamMember(
             @PathVariable String eventId,
             @RequestBody EventTeamMemberDto request) {
 
@@ -50,7 +51,7 @@ public class EventTeamController {
 
         // Check if already assigned
         if (eventTeamRepository.findByEventIdAndUserId(eventId, user.getId()).isPresent()) {
-            return ResponseEntity.badRequest().body("User is already a team member");
+            return ResponseEntity.badRequest().body(ApiResponse.error("User is already a team member"));
         }
 
         EventTeam teamMember = new EventTeam();
@@ -65,11 +66,11 @@ public class EventTeamController {
         }
 
         EventTeam savedMember = eventTeamRepository.save(teamMember);
-        return ResponseEntity.ok(convertToDto(savedMember));
+        return ResponseEntity.ok(ApiResponse.success(convertToDto(savedMember)));
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<?> removeTeamMember(
+    public ResponseEntity<ApiResponse<Void>> removeTeamMember(
             @PathVariable String eventId,
             @PathVariable String userId) {
 
@@ -77,7 +78,7 @@ public class EventTeamController {
                 .orElseThrow(() -> new RuntimeException("Team member not found"));
 
         eventTeamRepository.delete(member);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success("Member removed", null));
     }
 
     private EventTeamMemberDto convertToDto(EventTeam member) {

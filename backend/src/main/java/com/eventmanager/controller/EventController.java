@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.model.Event;
 import com.eventmanager.model.EventRegistration;
 import com.eventmanager.repository.EventRepository;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -25,25 +27,28 @@ public class EventController {
     private UserRepository userRepository;
 
     @GetMapping
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<Event>>> getAllEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return ResponseEntity.ok(ApiResponse.success(eventRepository.findAll(pageable)));
     }
 
     @PostMapping
-    public Event createEvent(@RequestBody Event event) {
-        return eventRepository.save(event);
+    public ResponseEntity<ApiResponse<Event>> createEvent(@RequestBody Event event) {
+        return ResponseEntity.ok(ApiResponse.success(eventRepository.save(event)));
     }
 
     // Register for an event
     @PostMapping("/{eventId}/register")
-    public ResponseEntity<?> registerForEvent(@PathVariable String eventId, @RequestParam String userId) {
+    public ResponseEntity<ApiResponse<String>> registerForEvent(@PathVariable String eventId, @RequestParam String userId) {
         if (!eventRepository.existsById(eventId)) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(404).body(ApiResponse.error("Event not found"));
         }
         
         com.eventmanager.model.User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return ResponseEntity.badRequest().body("User not found");
+            return ResponseEntity.badRequest().body(ApiResponse.error("User not found"));
         }
 
         Event event = eventRepository.findById(eventId).get();
@@ -53,7 +58,7 @@ public class EventController {
             .anyMatch(r -> r.getUser().getId().equals(userId));
             
         if (alreadyRegistered) {
-            return ResponseEntity.badRequest().body("Already registered");
+            return ResponseEntity.badRequest().body(ApiResponse.error("Already registered"));
         }
 
         EventRegistration registration = new EventRegistration();
@@ -65,13 +70,13 @@ public class EventController {
         event.setRegisteredCount(event.getRegisteredCount() + 1);
         eventRepository.save(event);
 
-        return ResponseEntity.ok("Registered successfully");
+        return ResponseEntity.ok(ApiResponse.success("Registered successfully", null));
     }
 
     // Get events registered by student with DTO
     @GetMapping("/student/{userId}")
-    public List<com.eventmanager.dto.EventDto> getEventsByStudent(@PathVariable String userId) {
-        return eventRegistrationRepository.findByUserId(userId).stream()
+    public ResponseEntity<ApiResponse<List<com.eventmanager.dto.EventDto>>> getEventsByStudent(@PathVariable String userId) {
+        List<com.eventmanager.dto.EventDto> events = eventRegistrationRepository.findByUserId(userId).stream()
             .map(reg -> {
                 com.eventmanager.dto.EventDto dto = new com.eventmanager.dto.EventDto();
                 Event event = reg.getEvent();
@@ -93,17 +98,18 @@ public class EventController {
                 return dto;
             })
             .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(events));
     }
 
     @PostMapping("/{eventId}/unregister")
-    public ResponseEntity<?> unregisterFromEvent(@PathVariable String eventId, @RequestParam String userId) {
+    public ResponseEntity<ApiResponse<String>> unregisterFromEvent(@PathVariable String eventId, @RequestParam String userId) {
         EventRegistration registration = eventRegistrationRepository.findByEventId(eventId).stream()
             .filter(r -> r.getUser().getId().equals(userId))
             .findFirst()
             .orElse(null);
 
         if (registration == null) {
-            return ResponseEntity.badRequest().body("Not registered");
+            return ResponseEntity.badRequest().body(ApiResponse.error("Not registered"));
         }
         
         // Logic to allow/disallow based on time can go here
@@ -115,29 +121,65 @@ public class EventController {
         event.setRegisteredCount(event.getRegisteredCount() - 1);
         eventRepository.save(event);
 
-        return ResponseEntity.ok("Unregistered successfully");
+        return ResponseEntity.ok(ApiResponse.success("Unregistered successfully", null));
     }
 
     @PostMapping("/{eventId}/attendance")
-    public ResponseEntity<?> markAttendance(@PathVariable String eventId, @RequestParam String userId) {
+    public ResponseEntity<ApiResponse<String>> markAttendance(@PathVariable String eventId, @RequestParam String userId) {
         EventRegistration registration = eventRegistrationRepository.findByEventId(eventId).stream()
             .filter(r -> r.getUser().getId().equals(userId))
             .findFirst()
             .orElse(null);
 
-        if (registration == null) return ResponseEntity.badRequest().body("Not registered");
+        if (registration == null) return ResponseEntity.badRequest().body(ApiResponse.error("Not registered"));
 
         registration.setStatus("ATTENDED");
         eventRegistrationRepository.save(registration);
         
-        return ResponseEntity.ok("Attendance marked");
+        return ResponseEntity.ok(ApiResponse.success("Attendance marked", null));
     }
 
     // Get events organized by faculty
     @GetMapping("/organizer/{organizerId}")
-    public List<Event> getEventsByOrganizer(@PathVariable String organizerId) {
-        return eventRepository.findAll().stream()
+    public ResponseEntity<ApiResponse<List<Event>>> getEventsByOrganizer(@PathVariable String organizerId) {
+        List<Event> events = eventRepository.findAll().stream()
             .filter(e -> e.getOrganizer() != null && e.getOrganizer().getId().equals(organizerId))
             .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(events));
+    }
+
+    @PostMapping("/seed-registrations")
+    public ResponseEntity<ApiResponse<Map<String, String>>> seedRegistrations(@RequestParam String userId) {
+        try {
+            com.eventmanager.model.User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
+            List<Event> events = eventRepository.findAll();
+            if (events.isEmpty()) return ResponseEntity.ok(ApiResponse.success(Map.of("message", "No events to seed")));
+
+            int count = 0;
+            for (Event event : events) {
+                if (count >= 3) break;
+                
+                boolean alreadyRegistered = eventRegistrationRepository.findByEventId(event.getId()).stream()
+                    .anyMatch(r -> r.getUser().getId().equals(userId));
+                    
+                if (!alreadyRegistered && !"COMPLETED".equalsIgnoreCase(event.getStatus())) {
+                    EventRegistration registration = new EventRegistration();
+                    registration.setEvent(event);
+                    registration.setUser(user);
+                    registration.setStatus("REGISTERED");
+                    registration.setCertificateIssued(false);
+                    eventRegistrationRepository.save(registration);
+                    
+                    event.setRegisteredCount(event.getRegisteredCount() + 1);
+                    eventRepository.save(event);
+                    count++;
+                }
+            }
+            return ResponseEntity.ok(ApiResponse.success(Map.of("message", "Seeded " + count + " event registrations")));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

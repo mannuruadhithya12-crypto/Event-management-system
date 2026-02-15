@@ -36,6 +36,9 @@ public class Webinar {
     private String bannerImage;
     private String status = "UPCOMING"; // UPCOMING, ONGOING, COMPLETED, CANCELLED
     
+    @Column(columnDefinition = "TEXT")
+    private String agenda;
+    
     private String createdBy; // User ID of creator
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -69,6 +72,8 @@ public class Webinar {
     public void setBannerImage(String bannerImage) { this.bannerImage = bannerImage; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getAgenda() { return agenda; }
+    public void setAgenda(String agenda) { this.agenda = agenda; }
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }

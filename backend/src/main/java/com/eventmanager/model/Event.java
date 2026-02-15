@@ -6,7 +6,10 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "events")
+@Table(name = "events", indexes = {
+    @Index(name = "idx_event_status", columnList = "status"),
+    @Index(name = "idx_event_type", columnList = "eventType")
+})
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

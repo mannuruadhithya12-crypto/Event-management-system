@@ -1,5 +1,6 @@
 package com.eventmanager.controller;
 
+import com.eventmanager.dto.ApiResponse;
 import com.eventmanager.dto.AuthResponse;
 import com.eventmanager.dto.LoginRequest;
 import com.eventmanager.dto.MessageResponse;
@@ -32,14 +33,16 @@ public class AuthController {
     com.eventmanager.repository.CollegeRepository collegeRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ApiResponse<AuthResponse>> authenticateUser(@RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateToken(authentication);
 
-        com.eventmanager.model.User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
+        com.eventmanager.model.User user = userRepository.findByEmail(loginRequest.getEmail())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+            
         com.eventmanager.dto.UserDto userDto = new com.eventmanager.dto.UserDto();
         userDto.setId(user.getId());
         userDto.setName(user.getName());
@@ -55,15 +58,15 @@ public class AuthController {
             userDto.setCollegeName(user.getCollege().getName());
         }
 
-        return ResponseEntity.ok(new AuthResponse(jwt, userDto));
+        return ResponseEntity.ok(ApiResponse.success(new AuthResponse(jwt, userDto)));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody com.eventmanager.dto.RegisterRequest signUpRequest) {
+    public ResponseEntity<ApiResponse<MessageResponse>> registerUser(@RequestBody com.eventmanager.dto.RegisterRequest signUpRequest) {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+                    .body(ApiResponse.error("Error: Email is already in use!"));
         }
 
         // Create new user's account
@@ -88,6 +91,6 @@ public class AuthController {
 
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return ResponseEntity.ok(ApiResponse.success("User registered successfully!", new MessageResponse("User registered successfully!")));
     }
 }

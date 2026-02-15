@@ -1,25 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState, useCallback } from 'react';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import {
     Award,
     Download,
-    ExternalLink,
     Search,
-    Filter,
     ShieldCheck,
-    Calendar,
     Trophy,
-    User as UserIcon,
     Medal,
-    X,
-    QrCode,
-    Share2,
-    Zap,
-    Cpu,
-    Globe,
-    ArrowRight
+    ArrowRight,
+    Inbox,
+    RefreshCw
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -28,255 +20,386 @@ import { useAuthStore } from '@/store';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog";
+import type { Certificate } from '@/types';
+
+const TiltCard = ({ children, className }: { children: React.ReactNode; className?: string }) => {
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const mouseXSpring = useSpring(x);
+    const mouseYSpring = useSpring(y);
+
+    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
+    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const xPct = mouseX / width - 0.5;
+        const yPct = mouseY / height - 0.5;
+        x.set(xPct);
+        y.set(yPct);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    return (
+        <motion.div
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ rotateY, rotateX, transformStyle: "preserve-3d" }}
+            className={cn("relative group", className)}
+        >
+            <div style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }} className="h-full">
+                {children}
+            </div>
+        </motion.div>
+    );
+};
+
+const MeshGradient = () => (
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-50">
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-teal-500/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] bg-blue-600/10 blur-[150px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
+    </div>
+);
 
 const CertificationCenter = () => {
     const { user } = useAuthStore();
-    const [certificates, setCertificates] = useState<any[]>([]);
+    const navigate = useNavigate();
+    const [certificates, setCertificates] = useState<Certificate[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCert, setSelectedCert] = useState<any>(null);
+    const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
+    const [filter, setFilter] = useState<'all' | 'hackathon' | 'webinar' | 'winner'>('all');
+    const [error, setError] = useState(false);
 
-    useEffect(() => {
-        const fetchCertificates = async () => {
-            if (!user) return;
-            try {
-                // Mocking data if API is empty for better visibility
-                const data = await certificateApi.getUserCertificates(user.id);
-                if (data.length === 0) {
-                    setCertificates([
-                        {
-                            id: 'c1',
-                            certificateNumber: 'HUB-2024-88A9',
-                            type: 'winner',
-                            position: '1st Place',
-                            issueDate: new Date().toISOString(),
-                            hackathon: { title: 'Neural Nexus: AI Agents 2024', college: { name: 'Tech University' } },
-                            digitalSignature: '0x88f2...de31'
-                        },
-                        {
-                            id: 'c2',
-                            certificateNumber: 'HUB-2024-11B2',
-                            type: 'participation',
-                            issueDate: new Date(Date.now() - 86400000 * 30).toISOString(),
-                            event: { title: 'Cyber Security Workshop', college: { name: 'State Engineering' } },
-                            digitalSignature: '0x11a5...bc22'
-                        }
-                    ]);
-                } else {
-                    setCertificates(data);
-                }
-            } catch (error) {
-                console.error('Failed to fetch certificates:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCertificates();
+    const fetchCertificates = useCallback(async () => {
+        if (!user) return;
+        setLoading(true);
+        setError(false);
+        try {
+            const data = await certificateApi.getUserCertificates(user.id);
+            setCertificates(data);
+        } catch (error) {
+            console.error('Failed to fetch certificates:', error);
+            setError(true);
+            toast.error('Achievement extraction failed. Re-sync recommended.');
+        } finally {
+            setLoading(false);
+        }
     }, [user]);
 
-    const handleDownload = async (certId: string) => {
-        toast.promise(
-            new Promise(resolve => setTimeout(resolve, 1500)),
-            {
-                loading: 'Generating high-fidelity PDF...',
-                success: 'Certificate decrypted and saved.',
-                error: 'Generation protocol failed.',
-            }
-        );
+    useEffect(() => {
+        fetchCertificates();
+    }, [fetchCertificates]);
+
+    const handleDownload = async (certId: string, certName: string) => {
+        if (!user) return;
+        const toastId = toast.loading('Initiating secure vault export...');
+        try {
+            const blob = await certificateApi.download(certId, user.id);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `CERT_${certName.toUpperCase().replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast.success('Certificate Decrypted & Downloaded', { id: toastId });
+        } catch (error) {
+            console.error('Download failed:', error);
+            toast.error('Encrypted stream interrupted', { id: toastId });
+        }
     };
 
-    const filteredCertificates = certificates.filter(cert =>
-        (cert.event?.title || cert.hackathon?.title || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredCertificates = certificates.filter(cert => {
+        const matchesSearch = (cert.eventTitle || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            cert.certificateId.toLowerCase().includes(searchQuery.toLowerCase());
+
+        if (filter === 'all') return matchesSearch;
+        if (filter === 'winner') return matchesSearch && cert.role.toLowerCase().includes('winner');
+        return matchesSearch && cert.category.toLowerCase() === filter;
+    });
 
     return (
-        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-32">
-            {/* Immersive Header */}
-            <div className="relative h-[400px] w-full bg-slate-950 overflow-hidden flex items-center justify-center mb-16">
-                <div className="absolute inset-0 z-0 opacity-20" style={{ backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[hsl(var(--teal))]/20 rounded-full blur-[120px]" />
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-32 selection:bg-teal-500/30">
+            {/* Premium Immersive Header */}
+            <div className="relative h-[500px] w-full bg-slate-950 overflow-hidden flex items-center justify-center mb-16">
+                <MeshGradient />
+                <div className="absolute inset-0 z-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
 
-                <div className="relative z-10 text-center space-y-8 px-6">
-                    <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mx-auto h-24 w-24 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 flex items-center justify-center shadow-2xl">
-                        <Award className="h-12 w-12 text-[hsl(var(--teal))]" />
+                <div className="relative z-10 text-center space-y-12 px-6 max-w-5xl">
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0, rotateY: 180 }}
+                        animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                        transition={{ duration: 0.8, type: "spring" }}
+                        className="mx-auto h-32 w-32 bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 flex items-center justify-center shadow-[0_0_50px_rgba(20,184,166,0.3)] relative group"
+                    >
+                        <Award className="h-16 w-16 text-teal-400 relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12" />
+                        <div className="absolute -inset-2 bg-teal-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     </motion.div>
-                    <div className="space-y-4">
-                        <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter italic leading-none">
-                            Wall of <span className="text-[hsl(var(--teal))]">Excellence</span>
-                        </h1>
-                        <p className="text-slate-500 font-black uppercase tracking-[0.4em] text-[10px]">Blockchain Verified Achievement Hub</p>
+
+                    <div className="space-y-6">
+                        <motion.h1
+                            initial={{ y: 30, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-7xl md:text-9xl font-black text-white uppercase tracking-tighter italic leading-none"
+                        >
+                            Digital <span className="text-teal-400 drop-shadow-[0_0_20px_rgba(45,212,191,0.5)]">Archive</span>
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="text-slate-400 font-black uppercase tracking-[0.6em] text-[12px]"
+                        >
+                            Verified Intellectual Property & Achievement Ledger
+                        </motion.p>
                     </div>
 
-                    <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-                        <div className="relative flex-1 group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[hsl(var(--teal))] to-blue-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition-all" />
-                            <div className="relative bg-slate-900 border border-white/10 rounded-2xl flex items-center px-4 h-14">
-                                <Search className="h-5 w-5 text-slate-500" />
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="flex flex-col md:flex-row items-center justify-center gap-6 max-w-2xl mx-auto"
+                    >
+                        <div className="relative flex-1 group w-full">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-blue-600 rounded-2xl blur opacity-20 group-focus-within:opacity-50 transition-all duration-500" />
+                            <div className="relative bg-slate-900 border border-white/10 rounded-2xl flex items-center px-6 h-18 shadow-2xl">
+                                <Search className="h-6 w-6 text-teal-500" />
                                 <Input
-                                    placeholder="IDENTIFY CREDENTIAL..."
-                                    className="bg-transparent border-none text-white font-black text-xs uppercase tracking-widest placeholder:text-slate-700 focus-visible:ring-0"
+                                    placeholder="SCANNING REPOSITORY..."
+                                    className="bg-transparent border-none text-white font-black text-base uppercase tracking-widest placeholder:text-slate-700 focus-visible:ring-0 h-full"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                 />
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                        className="flex flex-wrap justify-center gap-4"
+                    >
+                        {(['all', 'hackathon', 'webinar', 'winner'] as const).map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={cn(
+                                    "px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all duration-300 border backdrop-blur-md",
+                                    filter === f
+                                        ? "bg-teal-500 border-teal-500 text-white shadow-[0_10px_30px_rgba(20,184,166,0.4)] scale-105"
+                                        : "bg-white/5 border-white/10 text-slate-500 hover:bg-white/10 hover:text-white"
+                                )}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-8">
+            <div className="max-w-[1400px] mx-auto px-12">
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="h-96 rounded-[3rem] bg-slate-900/5 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800" />
+                            <div key={i} className="h-[500px] rounded-[4rem] bg-slate-900/5 dark:bg-slate-900 animate-pulse border border-slate-200 dark:border-slate-800 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                            </div>
                         ))}
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                ) : error ? (
+                    <div className="text-center py-40 bg-red-500/5 rounded-[4rem] border-2 border-red-500/20 max-w-2xl mx-auto">
+                        <RefreshCw className="h-16 w-16 text-red-500 mx-auto mb-8 animate-spin-slow" />
+                        <h3 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-4">Uplink Interrupted</h3>
+                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs px-12 mb-8">Unable to establish connection with the central achievement database.</p>
+                        <Button
+                            onClick={fetchCertificates}
+                            className="h-16 px-10 rounded-2xl bg-white text-slate-950 font-black uppercase tracking-widest text-xs hover:bg-red-500 hover:text-white transition-all shadow-2xl"
+                        >
+                            RE-ESTABLISH LINK
+                        </Button>
+                    </div>
+                ) : filteredCertificates.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
                         {filteredCertificates.map((cert, idx) => (
-                            <motion.div
-                                key={cert.id}
-                                initial={{ opacity: 0, y: 40 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="group cursor-pointer"
-                                onClick={() => setSelectedCert(cert)}
-                            >
-                                <Card className="h-full border-none shadow-2xl bg-white dark:bg-slate-900 rounded-[3.5rem] overflow-hidden p-10 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)] relative border-2 border-transparent hover:border-[hsl(var(--teal))]/20">
-                                    <div className="flex justify-between items-start mb-12">
+                            <TiltCard key={cert.id}>
+                                <Card className="h-full border-none shadow-[0_30px_80px_-20px_rgba(0,0,0,0.2)] bg-white dark:bg-slate-900 rounded-[4rem] overflow-hidden p-14 transition-all duration-700 hover:shadow-[0_50px_100px_-20px_rgba(20,184,166,0.15)] relative border-2 border-transparent hover:border-teal-500/20 flex flex-col justify-between">
+                                    <div className="absolute top-0 right-0 w-40 h-40 bg-teal-500/5 blur-[60px] rounded-full pointer-events-none" />
+
+                                    <div className="flex justify-between items-start mb-16 relative z-10">
                                         <div className={cn(
-                                            "h-20 w-20 rounded-[2rem] flex items-center justify-center transition-all duration-700 group-hover:scale-110",
-                                            cert.type === 'winner' ? 'bg-orange-500/10 text-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.1)]' : 'bg-[hsl(var(--teal))]/10 text-[hsl(var(--teal))]'
+                                            "h-28 w-28 rounded-[3rem] flex items-center justify-center transition-all duration-700 group-hover:scale-110 bg-white dark:bg-slate-800 shadow-2xl",
+                                            cert.role.includes('WINNER') ? 'text-amber-500' : 'text-teal-500'
                                         )}>
-                                            {cert.type === 'winner' ? <Trophy className="h-10 w-10" /> : <Medal className="h-10 w-10" />}
+                                            {cert.role.includes('WINNER') ? <Trophy className="h-14 w-14" /> : <Medal className="h-14 w-14" />}
                                         </div>
-                                        <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-400 border-none px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">
-                                            {cert.id.substring(0, 4)}
+                                        <Badge className="bg-slate-50 dark:bg-slate-800 text-slate-500 border-none px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-sm">
+                                            {cert.certificateId}
                                         </Badge>
                                     </div>
 
-                                    <div className="space-y-6">
-                                        <p className="text-[10px] font-black text-[hsl(var(--teal))] uppercase tracking-[0.4em] mb-2">{cert.hackathon?.college?.name || cert.event?.college?.name}</p>
-                                        <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-[1.1] uppercase italic tracking-tighter">
-                                            {cert.hackathon?.title || cert.event?.title}
-                                        </h3>
-                                        <div className="flex items-center gap-2 pt-4">
-                                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Decentralized ID Verified</span>
+                                    <div className="space-y-8 flex-1 relative z-10">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-1 w-8 bg-teal-500 rounded-full" />
+                                                <p className="text-[12px] font-black text-teal-500 uppercase tracking-[0.5em]">{cert.category}</p>
+                                            </div>
+                                            <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-[1] uppercase italic tracking-tighter">
+                                                {cert.eventTitle}
+                                            </h3>
+                                        </div>
+
+                                        <div className="flex items-center gap-4 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl px-6 w-fit">
+                                            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                                            <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest italic">Immutable Proof Generated</span>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">DESIGNATION / RANK</p>
+                                            <p className="text-xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight">{cert.role}</p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-12 pt-8 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                                    <div className="mt-16 pt-12 border-t border-slate-50 dark:border-slate-800/50 flex items-center justify-between relative z-10">
                                         <div>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Issue Date</p>
-                                            <p className="text-xs font-black text-slate-900 dark:text-white uppercase mt-1">{format(new Date(cert.issueDate), 'MMM yyyy')}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">TIMESTAMP</p>
+                                            <p className="text-base font-black text-slate-900 dark:text-white mt-1">{format(new Date(cert.issuedAt), 'MMMM yyyy')}</p>
                                         </div>
-                                        <div className="h-12 w-12 rounded-2xl bg-slate-950 text-white flex items-center justify-center group-hover:bg-[hsl(var(--teal))] transition-all">
-                                            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                        <div className="flex gap-4">
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-16 w-16 rounded-3xl border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/10 shadow-xl transition-all"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDownload(cert.id, cert.eventTitle || 'Certificate');
+                                                }}
+                                            >
+                                                <Download className="h-7 w-7" />
+                                            </Button>
+                                            <Button
+                                                className="h-16 w-16 rounded-3xl bg-slate-950 text-white hover:bg-teal-500 transition-all duration-500 shadow-2xl group shadow-slate-950/20"
+                                                onClick={() => setSelectedCert(cert)}
+                                            >
+                                                <ArrowRight className="h-7 w-7 group-hover:translate-x-2 transition-transform" />
+                                            </Button>
                                         </div>
                                     </div>
                                 </Card>
-                            </motion.div>
+                            </TiltCard>
                         ))}
                     </div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-48 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[5rem] border-2 border-dashed border-slate-200 dark:border-slate-800/50 max-w-4xl mx-auto shadow-2xl"
+                    >
+                        <div className="max-w-md mx-auto space-y-10">
+                            <div className="h-32 w-32 bg-slate-100 dark:bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto shadow-inner">
+                                <Inbox className="h-14 w-14 text-slate-400 group-hover:scale-110 transition-transform" />
+                            </div>
+                            <div className="space-y-4">
+                                <h3 className="text-4xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter">Vault Empty</h3>
+                                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs px-12 leading-relaxed">Your digital achievement record is currently dormant. Initiate participation protocols to earn verified credentials.</p>
+                            </div>
+                            <Button
+                                onClick={() => navigate('/dashboard/events')}
+                                className="h-20 px-12 rounded-3xl bg-teal-500 text-white font-black uppercase tracking-[0.3em] text-[11px] hover:bg-teal-600 shadow-[0_20px_40px_rgba(20,184,166,0.3)] transition-all hover:-translate-y-2"
+                            >
+                                EXPLORE OPPORTUNITIES
+                            </Button>
+                        </div>
+                    </motion.div>
                 )}
             </div>
 
-            {/* Certificate Detail Modal */}
-            <Dialog open={!!selectedCert} onOpenChange={() => setSelectedCert(null)}>
-                <DialogContent className="max-w-4xl bg-white dark:bg-slate-950 border-none rounded-[3.5rem] p-0 overflow-hidden shadow-4xl outline-none">
-                    <div className="relative">
-                        <button
-                            onClick={() => setSelectedCert(null)}
-                            className="absolute top-8 right-8 z-50 h-12 w-12 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-[hsl(var(--teal))] transition-all"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
-
-                        <div className="grid md:grid-cols-[1.2fr_1fr]">
-                            <div className="p-16 bg-slate-950 text-white space-y-12">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <Globe className="h-5 w-5 text-[hsl(var(--teal))]" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Official Credential</span>
+            <Dialog open={!!selectedCert} onOpenChange={(open) => !open && setSelectedCert(null)}>
+                <DialogContent className="max-w-4xl bg-slate-950/95 backdrop-blur-3xl border-slate-800 p-0 overflow-hidden rounded-[2rem]">
+                    <DialogHeader className="p-8 border-b border-white/10">
+                        <DialogTitle className="text-2xl font-black text-white uppercase italic tracking-tighter">
+                            Certificate Preview
+                        </DialogTitle>
+                    </DialogHeader>
+                    {selectedCert && (
+                        <div className="flex flex-col md:flex-row h-[600px]">
+                            <div className="flex-1 bg-slate-900/50 p-8 flex items-center justify-center border-r border-white/5 relative">
+                                {selectedCert.pdfUrl ? (
+                                    <iframe src={selectedCert.pdfUrl} className="w-full h-full rounded-xl shadow-2xl" title="Certificate Preview" />
+                                ) : (
+                                    <div className="text-center space-y-4">
+                                        <Award className="h-24 w-24 text-slate-700 mx-auto" />
+                                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Preview Not Available</p>
                                     </div>
-                                    <h2 className="text-5xl font-black uppercase tracking-tighter italic leading-[0.9]">
-                                        Digital <br /> <span className="text-[hsl(var(--teal))]">Signature.</span>
-                                    </h2>
-                                </div>
-
-                                <div className="space-y-8">
-                                    <div className="p-8 rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-3xl space-y-4">
-                                        <div className="flex items-center gap-4">
-                                            <QrCode className="h-12 w-12 text-white opacity-40" />
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-black text-[hsl(var(--teal))] uppercase tracking-widest">Certificate UID</p>
-                                                <p className="text-sm font-black font-mono">{selectedCert?.certificateNumber}</p>
-                                            </div>
-                                        </div>
-                                        <div className="pt-4 border-t border-white/10">
-                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Blockchain Proof</p>
-                                            <p className="text-[10px] font-mono text-slate-300 break-all">{selectedCert?.digitalSignature || '0x44ab...e911c2...'}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Button className="h-16 rounded-2xl bg-white text-slate-950 font-black uppercase tracking-widest text-[10px] hover:bg-[hsl(var(--teal))] hover:text-white transition-all gap-2" onClick={() => handleDownload(selectedCert.id)}>
-                                            <Download className="h-4 w-4" /> Download PDF
-                                        </Button>
-                                        <Button variant="outline" className="h-16 rounded-2xl border-white/10 text-white font-black uppercase tracking-widest text-[10px] hover:bg-white/5 gap-2">
-                                            <Share2 className="h-4 w-4" /> Share Proof
-                                        </Button>
-                                    </div>
-                                </div>
+                                )}
                             </div>
-
-                            <div className="p-16 bg-white dark:bg-slate-900 border-l border-slate-100 dark:border-slate-800 space-y-10">
+                            <div className="w-full md:w-80 bg-slate-950 p-8 space-y-8 overflow-y-auto">
                                 <div>
-                                    <p className="text-[10px] font-black text-[hsl(var(--teal))] uppercase tracking-[0.4em] mb-4">Achievement Intel</p>
-                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white leading-[1.1] uppercase italic tracking-tighter">
-                                        {selectedCert?.hackathon?.title || selectedCert?.event?.title}
-                                    </h3>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Event</p>
+                                    <h4 className="text-lg font-bold text-white leading-tight">{selectedCert.eventTitle}</h4>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Issue Date</p>
+                                    <p className="text-slate-200 font-mono">{format(new Date(selectedCert.issuedAt), 'dd MMM yyyy')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Verification ID</p>
+                                    <p className="text-teal-400 font-mono text-sm">{selectedCert.certificateId}</p>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Issuer Details</p>
-                                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase">{selectedCert?.hackathon?.college?.name || selectedCert?.event?.college?.name}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Achievement Tier</p>
-                                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase">{selectedCert?.type === 'winner' ? 'ELITE CHAMPION' : 'REGISTERED COMPETITOR'}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</p>
-                                        <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">PERMANENTLY SECURED</Badge>
-                                    </div>
-                                </div>
-
-                                <div className="pt-10 border-t border-slate-100 dark:border-slate-800 flex items-center flex-wrap gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <Zap className="h-4 w-4 text-orange-500" />
-                                        <span className="text-[10px] font-black text-slate-400 uppercase">+50 EXP Points</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Cpu className="h-4 w-4 text-blue-500" />
-                                        <span className="text-[10px] font-black text-slate-400 uppercase">Tech Portfolio Enabled</span>
-                                    </div>
+                                <div className="pt-8 space-y-4">
+                                    <Button
+                                        onClick={() => handleDownload(selectedCert.id, selectedCert.eventTitle || 'Certificate')}
+                                        className="w-full h-14 rounded-xl bg-teal-500 text-white font-bold uppercase tracking-widest text-xs hover:bg-teal-600"
+                                    >
+                                        <Download className="mr-2 h-4 w-4" /> Download PDF
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => navigate(`/verify/${selectedCert.certificateId}`)}
+                                        className="w-full h-14 rounded-xl border-white/10 text-white hover:bg-white/5 font-bold uppercase tracking-widest text-xs"
+                                    >
+                                        <ShieldCheck className="mr-2 h-4 w-4" /> Verify Publicly
+                                    </Button>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </DialogContent>
             </Dialog>
+
+            <style>{`
+                @keyframes shimmer {
+                    from { transform: translateX(-100%); }
+                    to { transform: translateX(100%); }
+                }
+                .animate-spin-slow {
+                    animation: spin 3s linear infinite;
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };

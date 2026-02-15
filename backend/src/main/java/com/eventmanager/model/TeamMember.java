@@ -6,7 +6,10 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "team_members")
+@Table(name = "team_members", indexes = {
+    @Index(name = "idx_teammember_user", columnList = "user_id"),
+    @Index(name = "idx_teammember_team", columnList = "team_id")
+})
 public class TeamMember {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

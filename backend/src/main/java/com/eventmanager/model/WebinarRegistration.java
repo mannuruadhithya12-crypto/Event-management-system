@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "webinar_registrations")
+@Table(name = "webinar_registrations", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"webinar_id", "user_id"})
+})
 public class WebinarRegistration {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface CertificateRepository extends JpaRepository<Certificate, String> {
     List<Certificate> findByUserId(String userId);
+    java.util.Optional<Certificate> findByCertificateId(String certificateId);
 }

@@ -300,18 +300,17 @@ export interface CollegeRanking {
 // Certificate Interface
 export interface Certificate {
   id: string;
-  userId: string;
-  userName: string;
+  certificateId: string;
+  studentId: string;
+  studentName: string;
   eventId?: string;
-  eventName?: string;
-  hackathonId?: string;
-  hackathonName?: string;
-  type: 'participation' | 'winner' | 'runner_up' | 'organizer' | 'judge';
-  position?: string;
-  issueDate: Date;
-  certificateUrl: string;
-  certificateNumber: string;
-  verified: boolean;
+  eventTitle?: string;
+  category: string;
+  role: string;
+  issuedAt: string;
+  status: 'VERIFIED' | 'REVOKED';
+  qrCodeUrl: string;
+  pdfUrl: string;
 }
 
 // Judge Evaluation
@@ -426,6 +425,7 @@ export interface Webinar {
   maxParticipants: number;
   registeredCount: number;
   bannerImage?: string;
+  agenda?: string;
   status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
   createdBy: string;
   createdAt: string;

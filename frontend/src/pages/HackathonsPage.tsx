@@ -38,11 +38,16 @@ const HackathonsPage = () => {
     setLoading(true);
     try {
       // If filters are empty, use getAll, else use filter endpoint
-      const hasFilters = Object.keys(filters).length > 0;
-      const data = hasFilters
-        ? await hackathonApi.filter(filters)
-        : await hackathonApi.getAll();
-      setHackathons(data);
+      // Always use filter endpoint to benefit from pagination
+      const data = await hackathonApi.filter(filters);
+
+      if (data && typeof data === 'object' && 'content' in data && Array.isArray(data.content)) {
+        setHackathons(data.content);
+      } else if (Array.isArray(data)) {
+        setHackathons(data);
+      } else {
+        setHackathons([]);
+      }
     } catch (error) {
       console.error("Failed to fetch hackathons", error);
     } finally {

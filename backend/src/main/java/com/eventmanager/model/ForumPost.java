@@ -32,4 +32,34 @@ public class ForumPost {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<ForumComment> comments;
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public User getAuthor() { return author; }
+    public void setAuthor(User author) { this.author = author; }
+
+    public Integer getUpvotes() { return upvotes; }
+    public void setUpvotes(Integer upvotes) { this.upvotes = upvotes; }
+
+    public Integer getDownvotes() { return downvotes; }
+    public void setDownvotes(Integer downvotes) { this.downvotes = downvotes; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<ForumComment> getComments() { return comments; }
+    public void setComments(List<ForumComment> comments) { this.comments = comments; }
 }

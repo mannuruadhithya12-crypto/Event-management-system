@@ -38,7 +38,7 @@ export default function WebinarDetailPage() {
         } catch (error) {
             console.error('Error fetching webinar:', error);
             toast.error('Failed to load webinar details');
-            navigate('/dashboard/student/webinars');
+            navigate('/dashboard/webinars');
         } finally {
             setLoading(false);
         }
@@ -63,22 +63,15 @@ export default function WebinarDetailPage() {
     const handleCancelRegistration = async () => {
         if (!webinar || !user) return;
 
-        // In a real app, we might want a confirmation dialog here
         if (!window.confirm('Are you sure you want to cancel your registration?')) return;
 
         try {
             setRegistering(true);
-            // Assuming we have a cancel endpoint in API, user ID might be needed or handled by token
-            // For now, let's assume register endpoint toggles or we use a separate one if available
-            // The API definition has a cancel endpoint but it takes webinar ID. 
-            // Often cancel registration is specific. 
-            // Let's check api.ts: cancel: (id: string) => api.post<void>(`/webinars/${id}/cancel`, {}),
-            // This looks like CANCEL WEBINAR (admin) not cancel registration.
-            // The requirement didn't explicitly ask for student cancel registration, but let's see.
-            // If not available, we can skip or implement later. 
-            // I'll skip "Cancel Registration" for student for now to avoid using the Admin "Cancel Webinar" endpoint by mistake.
-            toast.error('Cancellation feature coming soon');
+            await webinarApi.unregister(webinar.id, user.id);
+            toast.success('Registration cancelled successfully');
+            setWebinar({ ...webinar, isRegistered: false, registeredCount: webinar.registeredCount - 1 });
         } catch (error) {
+            console.error('Cancellation failed:', error);
             toast.error('Failed to cancel registration');
         } finally {
             setRegistering(false);
@@ -113,6 +106,47 @@ export default function WebinarDetailPage() {
         }
     };
 
+    const handleDownloadCertificate = async () => {
+        if (!webinar || !user) return;
+        try {
+            toast.loading('Preparing your certificate...', { id: 'cert-download' });
+            const blob = await webinarApi.generateCertificateBlob(webinar.id, user.id);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Certificate_${webinar.title.replace(/\s+/g, '_')}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Certificate downloaded successfully!', { id: 'cert-download' });
+        } catch (error) {
+            console.error('Certificate download failed:', error);
+            toast.error('Failed to download certificate', { id: 'cert-download' });
+        }
+    };
+
+    const handleShare = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: webinar?.title,
+                text: `Join this webinar: ${webinar?.title}`,
+                url: window.location.href,
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success('Link copied to clipboard!');
+        }
+    };
+
+    const handleAddToCalendar = () => {
+        if (!webinar) return;
+        const startDate = new Date(webinar.startDate).toISOString().replace(/-|:|\.\d+/g, '');
+        const endDate = new Date(webinar.endDate || new Date(webinar.startDate).getTime() + 3600000).toISOString().replace(/-|:|\.\d+/g, '');
+        const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(webinar.title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(webinar.description)}&location=${encodeURIComponent(webinar.mode)}`;
+        window.open(calendarUrl, '_blank');
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -131,7 +165,7 @@ export default function WebinarDetailPage() {
         <div className="space-y-8 max-w-7xl mx-auto">
             {/* Back Button */}
             <button
-                onClick={() => navigate('/dashboard/student/webinars')}
+                onClick={() => navigate('/dashboard/webinars')}
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" />
@@ -176,7 +210,7 @@ export default function WebinarDetailPage() {
                         </div>
                         <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-700/50">
                             <Clock className="w-5 h-5 text-blue-400" />
-                            <span>{new Date(webinar.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span>{webinar.duration} Minutes</span>
                         </div>
                         <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-700/50">
                             {webinar.mode === 'Online' ? <Video className="w-5 h-5 text-green-400" /> : <MapPin className="w-5 h-5 text-red-400" />}
@@ -184,7 +218,7 @@ export default function WebinarDetailPage() {
                         </div>
                         <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-700/50">
                             <Users className="w-5 h-5 text-yellow-400" />
-                            <span>{webinar.registeredCount} Registered</span>
+                            <span>{webinar.registeredCount} / {webinar.maxParticipants} Seats</span>
                         </div>
                     </div>
 
@@ -208,28 +242,55 @@ export default function WebinarDetailPage() {
                                 )}
 
                                 {isCompleted && (
-                                    <button
-                                        onClick={() => setFeedbackOpen(true)}
-                                        className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all font-medium border border-slate-600"
-                                    >
-                                        <MessageSquare className="w-5 h-5 text-yellow-400" />
-                                        Give Feedback
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={() => setFeedbackOpen(true)}
+                                            className="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all font-medium border border-slate-600"
+                                        >
+                                            <MessageSquare className="w-5 h-5 text-yellow-400" />
+                                            Give Feedback
+                                        </button>
+                                        <button
+                                            onClick={handleDownloadCertificate}
+                                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-500 hover:from-yellow-500 hover:to-orange-400 text-white rounded-xl shadow-lg transition-all font-medium"
+                                        >
+                                            < Award className="w-5 h-5 text-white" />
+                                            Download Certificate
+                                        </button>
+                                    </>
                                 )}
+
+                                <button
+                                    onClick={handleCancelRegistration}
+                                    disabled={registering}
+                                    className="px-6 py-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all font-medium border border-red-500/20"
+                                >
+                                    Cancel Registration
+                                </button>
+                                <button
+                                    onClick={handleAddToCalendar}
+                                    className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all font-medium border border-slate-700"
+                                >
+                                    <Calendar className="w-5 h-5" />
+                                    Add to Calendar
+                                </button>
                             </>
                         ) : (
                             isUpcoming && (
                                 <button
                                     onClick={handleRegister}
-                                    disabled={registering}
+                                    disabled={registering || (webinar.registeredCount >= (webinar.maxParticipants || 0))}
                                     className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/25 transition-all font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                                 >
-                                    {registering ? 'Registering...' : 'Register for Free'}
+                                    {registering ? 'Registering...' : (webinar.registeredCount >= (webinar.maxParticipants || 0) ? 'Seats Full' : 'Register for Free')}
                                 </button>
                             )
                         )}
 
-                        <button className="p-3 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-xl transition-colors border border-slate-700">
+                        <button
+                            onClick={handleShare}
+                            className="p-3 bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white rounded-xl transition-colors border border-slate-700"
+                        >
                             <Share2 className="w-5 h-5" />
                         </button>
                     </div>
@@ -248,6 +309,16 @@ export default function WebinarDetailPage() {
                         <p className="text-gray-300 leading-relaxed text-lg">
                             {webinar.description}
                         </p>
+                    </div>
+
+                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+                        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                            <Clock className="w-6 h-6 text-cyan-400" />
+                            Agenda
+                        </h2>
+                        <div className="prose prose-invert max-w-none text-gray-300 whitespace-pre-line">
+                            {webinar.agenda || "1. Introduction\n2. Key Concepts\n3. Practical Session\n4. Q&A"}
+                        </div>
                     </div>
 
                     <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 backdrop-blur-sm">

@@ -22,6 +22,7 @@ public class WebinarDto {
     private String status;
     private String createdBy;
     private LocalDateTime createdAt;
+    private String agenda;
     private Boolean isRegistered; // Helper for frontend
 
     public String getId() { return id; }
@@ -60,4 +61,6 @@ public class WebinarDto {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public Boolean getIsRegistered() { return isRegistered; }
     public void setIsRegistered(Boolean isRegistered) { this.isRegistered = isRegistered; }
+    public String getAgenda() { return agenda; }
+    public void setAgenda(String agenda) { this.agenda = agenda; }
 }

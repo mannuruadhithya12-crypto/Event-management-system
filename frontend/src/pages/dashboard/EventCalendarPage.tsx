@@ -63,20 +63,38 @@ const EventCalendarPage = () => {
                     { id: 'h1', title: 'CodeFest', startDate: new Date(Date.now() + 86400000 * 3).toISOString(), collegeName: 'State Uni', type: 'hackathon' }
                 ] as any;
 
-                // Try real API
-                try {
-                    const [e, h, w] = await Promise.all([
-                        api.get<Event[]>('/events'),
-                        api.get<Hackathon[]>('/hackathons'),
-                        api.get<Webinar[]>('/webinars')
-                    ]);
-                    if (e) setEvents(e);
-                    if (h) setHackathons(h);
-                    if (w) setWebinars(w || []);
-                } catch (e) {
-                    console.warn("Using mock data for calendar as API failed or empty", e);
-                    setEvents(eventsData);
-                    setHackathons(hackathonsData);
+                // Try real API with resilience
+                const results = await Promise.allSettled([
+                    api.get<any>('/events'),
+                    api.get<Hackathon[]>('/hackathons'),
+                    api.get<Webinar[]>('/webinars')
+                ]);
+
+                if (results[0].status === 'fulfilled') {
+                    const e = results[0].value;
+                    // Handle Spring Data Page object
+                    if (e && typeof e === 'object' && 'content' in e && Array.isArray(e.content)) {
+                        setEvents(e.content);
+                    } else if (Array.isArray(e)) {
+                        setEvents(e);
+                    } else {
+                        setEvents([]);
+                    }
+                } else {
+                    console.error('Events API failed', results[0].reason);
+                }
+
+                if (results[1].status === 'fulfilled') {
+                    setHackathons(results[1].value || []);
+                } else {
+                    console.error('Hackathons API failed', results[1].reason);
+                    setHackathons(hackathonsData); // Fallback
+                }
+
+                if (results[2].status === 'fulfilled') {
+                    setWebinars(results[2].value || []);
+                } else {
+                    console.error('Webinars API failed', results[2].reason);
                 }
 
             } catch (error) {
@@ -88,9 +106,9 @@ const EventCalendarPage = () => {
 
     const handleDateClick = (day: Date) => {
         const dayEvents = [
-            ...events.filter(e => isSameDay(new Date(e.startDate), day)).map(e => ({ ...e, type: 'event' })),
-            ...hackathons.filter(h => isSameDay(new Date(h.startDate), day)).map(h => ({ ...h, type: 'hackathon' })),
-            ...webinars.filter(w => isSameDay(new Date(w.startDate), day)).map(w => ({ ...w, type: 'webinar' }))
+            ...events.filter(e => e.startDate && isSameDay(new Date(e.startDate), day)).map(e => ({ ...e, type: 'event' })),
+            ...hackathons.filter(h => h.startDate && isSameDay(new Date(h.startDate), day)).map(h => ({ ...h, type: 'hackathon' })),
+            ...webinars.filter(w => w.startDate && isSameDay(new Date(w.startDate), day)).map(w => ({ ...w, type: 'webinar' }))
         ];
 
         if (dayEvents.length > 0) {
@@ -185,9 +203,26 @@ const EventCalendarPage = () => {
                 formattedDate = format(day, dateFormat);
                 const cloneDay = day;
 
-                const dayEvents = filter !== 'hackathon' && filter !== 'webinar' ? events.filter(e => isSameDay(new Date(e.startDate), cloneDay)) : [];
-                const dayHackathons = filter !== 'event' && filter !== 'webinar' ? hackathons.filter(h => isSameDay(new Date(h.startDate), cloneDay)) : [];
-                const dayWebinars = filter !== 'event' && filter !== 'hackathon' ? webinars.filter(w => isSameDay(new Date(w.startDate), cloneDay)) : [];
+                const dayEvents = filter !== 'hackathon' && filter !== 'webinar' ? events.filter(e => {
+                    if (!e.startDate) return false;
+                    try {
+                        return isSameDay(new Date(e.startDate), cloneDay);
+                    } catch (err) { return false; }
+                }) : [];
+
+                const dayHackathons = filter !== 'event' && filter !== 'webinar' ? hackathons.filter(h => {
+                    if (!h.startDate) return false;
+                    try {
+                        return isSameDay(new Date(h.startDate), cloneDay);
+                    } catch (err) { return false; }
+                }) : [];
+
+                const dayWebinars = filter !== 'event' && filter !== 'hackathon' ? webinars.filter(w => {
+                    if (!w.startDate) return false;
+                    try {
+                        return isSameDay(new Date(w.startDate), cloneDay);
+                    } catch (err) { return false; }
+                }) : [];
 
                 const hasContent = dayEvents.length > 0 || dayHackathons.length > 0 || dayWebinars.length > 0;
 
