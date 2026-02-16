@@ -11,6 +11,8 @@ public interface SubmissionService {
 
     List<Submission> getSubmissionsByTeam(String teamId);
 
+    List<Submission> getSubmissionsByEvent(String eventId);
+
     Optional<Submission> getSubmissionById(String id);
 
     void updateSubmission(Submission submission);

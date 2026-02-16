@@ -30,6 +30,11 @@ public class SubmissionController {
         return ResponseEntity.ok(ApiResponse.success(submissionService.getSubmissionsByTeam(teamId)));
     }
 
+    @GetMapping("/event/{eventId}")
+    public ResponseEntity<ApiResponse<List<Submission>>> getSubmissionsByEvent(@PathVariable String eventId) {
+        return ResponseEntity.ok(ApiResponse.success(submissionService.getSubmissionsByEvent(eventId)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Submission>> getSubmissionById(@PathVariable String id) {
         return submissionService.getSubmissionById(id)
@@ -38,7 +43,8 @@ public class SubmissionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateSubmission(@PathVariable String id, @RequestBody Submission submission) {
+    public ResponseEntity<ApiResponse<Void>> updateSubmission(@PathVariable String id,
+            @RequestBody Submission submission) {
         submission.setId(id);
         submissionService.updateSubmission(submission);
         return ResponseEntity.ok(ApiResponse.success("Submission updated successfully", null));

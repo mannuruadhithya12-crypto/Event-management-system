@@ -2,7 +2,6 @@ package com.eventmanager.service;
 
 import com.eventmanager.model.Submission;
 import com.eventmanager.repository.SubmissionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +55,11 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Override
     public List<Submission> getSubmissionsByTeam(String teamId) {
         return submissionRepository.findByTeamId(teamId);
+    }
+
+    @Override
+    public List<Submission> getSubmissionsByEvent(String eventId) {
+        return submissionRepository.findByEventId(eventId);
     }
 
     @Override

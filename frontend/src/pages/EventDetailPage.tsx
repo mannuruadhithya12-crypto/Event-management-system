@@ -26,21 +26,33 @@ import { Star } from 'lucide-react';
 import { feedbackApi } from '@/lib/api';
 import { format } from 'date-fns';
 
+import { judgeService } from '@/services/judgeService';
+import { Trophy, Medal, Crown } from 'lucide-react';
+
 const EventDetailPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [feedbacks, setFeedbacks] = useState<any[]>([]);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // ... existing state
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchFeedback();
+      checkLockStatus();
     }
   }, [id]);
+
+  const checkLockStatus = async () => {
+    try {
+      const locked = await judgeService.getLockStatus(id!);
+      setIsLocked(locked);
+      if (locked) {
+        const data = await judgeService.getLeaderboard(id!);
+        setLeaderboard(data);
+      }
+    } catch (e) {
+      console.error("Error fetching lock status or leaderboard", e);
+    }
+  };
 
   const fetchFeedback = async () => {
     try {
@@ -186,6 +198,84 @@ const EventDetailPage = () => {
                 <TabsTrigger value="about">About</TabsTrigger>
                 {event.agenda && event.agenda.length > 0 && <TabsTrigger value="agenda">Agenda</TabsTrigger>}
                 {event.speakers && event.speakers.length > 0 && <TabsTrigger value="speakers">Speakers</TabsTrigger>}
+                {isLocked && <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>}
+                {isLocked && (
+                  <TabsContent value="leaderboard" className="mt-6">
+                    <div className="space-y-8">
+                      <div className="flex flex-col items-center justify-center gap-8 md:flex-row md:items-end mb-12 py-8 bg-slate-50 dark:bg-slate-800/50 rounded-3xl">
+                        {leaderboard.length > 1 && (
+                          <div className="order-2 flex flex-col items-center md:order-1">
+                            <div className="relative">
+                              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-slate-300">
+                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${leaderboard[1].teamName}`} alt="" />
+                              </div>
+                              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-slate-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</div>
+                            </div>
+                            <h4 className="mt-4 font-bold">{leaderboard[1].teamName}</h4>
+                            <p className="text-xl font-bold text-slate-400">{leaderboard[1].score.toFixed(1)}</p>
+                          </div>
+                        )}
+                        {leaderboard.length > 0 && (
+                          <div className="order-1 flex flex-col items-center md:order-2">
+                            <div className="relative">
+                              <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-amber-400 shadow-lg shadow-amber-500/20">
+                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${leaderboard[0].teamName}`} alt="" />
+                              </div>
+                              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-amber-400 text-white rounded-full p-1.5 shadow-lg">
+                                <Crown className="w-5 h-5" />
+                              </div>
+                            </div>
+                            <h4 className="mt-6 text-lg font-bold">{leaderboard[0].teamName}</h4>
+                            <p className="text-3xl font-bold text-amber-500">{leaderboard[0].score.toFixed(1)}</p>
+                          </div>
+                        )}
+                        {leaderboard.length > 2 && (
+                          <div className="order-3 flex flex-col items-center">
+                            <div className="relative">
+                              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-amber-700">
+                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${leaderboard[2].teamName}`} alt="" />
+                              </div>
+                              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">3</div>
+                            </div>
+                            <h4 className="mt-4 font-bold">{leaderboard[2].teamName}</h4>
+                            <p className="text-xl font-bold text-amber-700">{leaderboard[1].score.toFixed(1)}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <Card>
+                        <CardContent className="p-0">
+                          <table className="w-full">
+                            <thead className="bg-slate-50 dark:bg-slate-900 border-b">
+                              <tr>
+                                <th className="px-6 py-4 text-left text-sm font-semibold">Rank</th>
+                                <th className="px-6 py-4 text-left text-sm font-semibold">Team / Project</th>
+                                <th className="px-6 py-4 text-right text-sm font-semibold">Average Score</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {leaderboard.map((entry: any) => (
+                                <tr key={entry.submissionId} className="hover:bg-slate-50/50">
+                                  <td className="px-6 py-4">
+                                    <Badge variant={entry.rank === 1 ? "default" : "secondary"} className={cn(
+                                      entry.rank === 1 && "bg-amber-400 hover:bg-amber-500",
+                                      entry.rank === 2 && "bg-slate-300",
+                                      entry.rank === 3 && "bg-amber-700"
+                                    )}>
+                                      #{entry.rank}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 font-medium">{entry.teamName} - {entry.title}</td>
+                                  <td className="px-6 py-4 text-right font-bold text-[hsl(var(--teal))]">{entry.score.toFixed(1)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+                )}
                 {event.status === 'completed' && <TabsTrigger value="feedback">Feedback</TabsTrigger>}
               </TabsList>
 

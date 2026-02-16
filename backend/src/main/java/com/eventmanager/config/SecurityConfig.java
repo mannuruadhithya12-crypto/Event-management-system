@@ -56,15 +56,21 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/clubs/**").permitAll()
-                        .requestMatchers("/api/events/**").permitAll()
-                        .requestMatchers("/api/forum/**").permitAll()
-                        .requestMatchers("/api/student/**").permitAll()
-                        .requestMatchers("/api/hackathons/**").permitAll()
-                        .requestMatchers("/api/webinars/**").permitAll()
-                        .requestMatchers("/api/certificates/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        // Governance & Approval (HOD/Faculty)
+                        .requestMatchers("/api/governance/**")
+                        .hasAnyRole("HOD", "FACULTY", "COLLEGE_ADMIN", "SUPER_ADMIN")
+                        // Judge specific routes
+                        .requestMatchers("/api/judge/**").hasAnyRole("JUDGE", "DIRECTOR")
+                        .requestMatchers("/api/evaluation/**").hasAnyRole("JUDGE", "DIRECTOR")
+                        // General API access
+                        .requestMatchers("/api/clubs/**").authenticated()
+                        .requestMatchers("/api/events/**").authenticated()
+                        .requestMatchers("/api/forum/**").authenticated()
+                        .requestMatchers("/api/student/**").authenticated()
+                        .requestMatchers("/api/hackathons/**").authenticated()
+                        .requestMatchers("/api/webinars/**").authenticated()
+                        .requestMatchers("/api/certificates/**").authenticated()
+                        .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         http.authenticationProvider(authenticationProvider());
@@ -72,6 +78,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();

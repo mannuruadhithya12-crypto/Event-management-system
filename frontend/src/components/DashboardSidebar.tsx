@@ -22,70 +22,85 @@ import {
   MessageSquare,
   Globe,
   Video,
+  Activity,
+  TrendingUp,
+  Shield,
+  CheckCircle,
+  Lock,
+  ClipboardList,
+  PlayCircle
 } from 'lucide-react';
 import { useAuthStore, useUIStore } from '@/store';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-const getMenuItems = (role: string) => {
-  const commonItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Hackathons', href: '/hackathons', icon: Trophy },
-    { name: 'Events', href: '/events', icon: Calendar },
-    { name: 'Resources', href: '/resources', icon: BookOpen },
-  ];
+import { Monitor, BarChart } from 'lucide-react';
 
+const getMenuItems = (role: string) => {
   switch (role) {
     case 'super_admin':
       return [
-        { name: 'Overview', href: '/dashboard/super-admin', icon: LayoutDashboard },
-        { name: 'Colleges', href: '/dashboard/super-admin/colleges', icon: Building2 },
-        { name: 'Users', href: '/dashboard/super-admin/users', icon: Users },
-        { name: 'Analytics', href: '/dashboard/super-admin/analytics', icon: BarChart3 },
-        { name: 'Reports', href: '/dashboard/super-admin/reports', icon: FileText },
-        { name: 'Settings', href: '/dashboard/super-admin/settings', icon: Settings },
+        { name: 'University Control', href: '/dashboard/super-admin', icon: Building2 },
+        { name: 'Manage Colleges', href: '/dashboard/super-admin/colleges', icon: Building2 },
+        { name: 'HOD Accounts', href: '/dashboard/super-admin/hods', icon: Users },
+        { name: 'Configuration', href: '/dashboard/super-admin/settings', icon: Settings },
+        { name: 'Global Analytics', href: '/dashboard/super-admin/analytics', icon: BarChart3 },
+      ];
+    case 'dean_of_campus':
+      return [
+        { name: 'Campus Analytics', href: '/dashboard/dean', icon: BarChart3 },
+        { name: 'Dept. Performance', href: '/dashboard/dean/performance', icon: TrendingUp },
+        { name: 'Governance Reports', href: '/dashboard/dean/reports', icon: FileText },
+        { name: 'Audit Logs', href: '/dashboard/dean/audits', icon: Shield },
+        { name: 'System Health', href: '/dashboard/dean/health', icon: Activity },
       ];
     case 'college_admin':
       return [
-        { name: 'Overview', href: '/dashboard/college-admin', icon: LayoutDashboard },
-        { name: 'Students', href: '/dashboard/college-admin/students', icon: GraduationCap },
-        { name: 'Faculty', href: '/dashboard/college-admin/faculty', icon: Users },
-        { name: 'Events', href: '/dashboard/college-admin/events', icon: Calendar },
-        { name: 'Hackathons', href: '/dashboard/college-admin/hackathons', icon: Trophy },
-        { name: 'Content', href: '/dashboard/college-admin/content', icon: FolderOpen },
-        { name: 'Analytics', href: '/dashboard/college-admin/analytics', icon: BarChart3 },
+        { name: 'College Overview', href: '/dashboard/college-admin', icon: LayoutDashboard },
+        { name: 'Club Management', href: '/dashboard/college-admin/clubs', icon: Users },
+        { name: 'Dept. Monitoring', href: '/dashboard/college-admin/departments', icon: Building2 },
+        { name: 'Event Audits', href: '/dashboard/college-admin/audits', icon: FileText },
+      ];
+    case 'hod':
+      return [
+        { name: 'Dept. Overview', href: '/dashboard/hod', icon: LayoutDashboard },
+        { name: 'Approve Scores', href: '/dashboard/hod/scores', icon: CheckCircle },
+        { name: 'Lock Results', href: '/dashboard/hod/lock', icon: Lock },
+        { name: 'Faculty Oversight', href: '/dashboard/hod/faculty', icon: Users },
+        { name: 'Judge Management', href: '/dashboard/hod/judges', icon: Gavel },
+      ];
+    case 'faculty_coordinator':
+      return [
+        { name: 'Registrations', href: '/dashboard/coordinator', icon: Users },
+        { name: 'Attendance', href: '/dashboard/coordinator/attendance', icon: ClipboardList },
+        { name: 'Event Chat', href: '/dashboard/coordinator/chat', icon: MessageSquare },
+        { name: 'Analytics', href: '/dashboard/coordinator/analytics', icon: BarChart3 },
       ];
     case 'faculty':
       return [
         { name: 'Overview', href: '/dashboard/faculty', icon: LayoutDashboard },
         { name: 'My Events', href: '/dashboard/faculty/events', icon: Calendar },
         { name: 'My Hackathons', href: '/dashboard/faculty/hackathons', icon: Trophy },
+        { name: 'Assigned Clubs', href: '/dashboard/faculty/clubs', icon: Users },
+        { name: 'Start Event', href: '/dashboard/faculty/start', icon: PlayCircle },
         { name: 'Resources', href: '/dashboard/faculty/resources', icon: FolderOpen },
         { name: 'Students', href: '/dashboard/faculty/students', icon: GraduationCap },
         { name: 'Analytics', href: '/dashboard/faculty/analytics', icon: BarChart3 },
+        { name: 'Reports', href: '/dashboard/faculty/reports', icon: FileText },
       ];
     case 'judge':
       return [
-        { name: 'Overview', href: '/dashboard/judge', icon: LayoutDashboard },
-        { name: 'My Hackathons', href: '/dashboard/judge/hackathons', icon: Trophy },
-        { name: 'Submissions', href: '/dashboard/judge/submissions', icon: FileText },
-        { name: 'Leaderboard', href: '/dashboard/judge/leaderboard', icon: Award },
+        { name: 'Dashboard', href: '/dashboard/judge', icon: LayoutDashboard },
+        { name: 'My Events', href: '/dashboard/judge/events', icon: Calendar },
       ];
     case 'student':
     default:
       return [
-        { name: 'Overview', href: '/dashboard/student', icon: LayoutDashboard },
-        { name: 'Clubs', href: '/dashboard/student/clubs', icon: Users },
-        { name: 'Forum', href: '/dashboard/forum', icon: Globe },
-        { name: 'Community', href: '/dashboard/community', icon: MessageSquare },
-        { name: 'My Hackathons', href: '/dashboard/student/my-hackathons', icon: Trophy },
-        { name: 'My Events', href: '/dashboard/student/events', icon: Calendar },
+        { name: 'My Events', href: '/dashboard/student', icon: Calendar },
         { name: 'My Teams', href: '/dashboard/student/teams', icon: Users },
-        { name: 'Webinars', href: '/dashboard/webinars', icon: Video },
         { name: 'Certificates', href: '/dashboard/student/certificates', icon: Award },
-        { name: 'Calendar', href: '/dashboard/calendar', icon: Calendar },
-        { name: 'Support', href: '/dashboard/support', icon: HelpCircle },
-        { name: 'Analytics', href: '/dashboard/student/analytics', icon: BarChart3 },
+        { name: 'Leaderboard', href: '/dashboard/student/leaderboard', icon: Trophy },
+        { name: 'Clubs', href: '/dashboard/student/clubs', icon: Users },
       ];
   }
 };

@@ -33,6 +33,29 @@ public class JwtUtils {
         return createToken(claims, username);
     }
 
+    public String generateToken(com.eventmanager.model.User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole());
+        claims.put("subRole", user.getSubRole());
+        claims.put("academicYear", user.getAcademicYear());
+        claims.put("directorRole", user.getDirectorRole()); // Keeping for compatibility
+
+        if (user.getCollege() != null) {
+            claims.put("collegeId", user.getCollege().getId());
+        }
+
+        if (user.getDepartmentEntity() != null) {
+            claims.put("departmentId", user.getDepartmentEntity().getId());
+        } else if (user.getDepartment() != null) {
+            claims.put("departmentName", user.getDepartment());
+        }
+
+        // Add name for frontend convenience if needed
+        claims.put("name", user.getName());
+
+        return createToken(claims, user.getEmail());
+    }
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)

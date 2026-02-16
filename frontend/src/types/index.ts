@@ -1,5 +1,5 @@
 // User Roles
-export type UserRole = 'super_admin' | 'college_admin' | 'faculty' | 'student' | 'judge' | 'sponsor';
+export type UserRole = 'super_admin' | 'college_admin' | 'hod' | 'faculty' | 'student' | 'judge' | 'sponsor' | 'dean_of_campus' | 'faculty_coordinator';
 
 // User Interface
 export interface User {
@@ -12,7 +12,11 @@ export interface User {
   collegeId?: string;
   collegeName?: string;
   department?: string;
-  year?: number;
+  directorRole?: string;
+  isClubHead?: boolean;
+  year?: number; // Legacy field, map academicYear to this or use academicYear
+  academicYear?: number;
+  subRole?: string;
   points: number;
   streak: number;
   createdAt: Date;
@@ -63,8 +67,7 @@ export interface Hackathon {
   maxTeamSize: number;
   minTeamSize: number;
   prizePool: number;
-  currency: string;
-  status: 'draft' | 'published' | 'registration_open' | 'ongoing' | 'completed' | 'cancelled';
+  status: 'draft' | 'published' | 'registration_open' | 'ongoing' | 'completed' | 'cancelled' | 'HOD_APPROVAL_PENDING' | 'ACTIVE';
   tags: string[];
   techStack: string[];
   problemStatements: ProblemStatement[];
@@ -128,8 +131,7 @@ export interface Event {
   registrationDeadline?: Date;
   capacity?: number;
   registeredCount: number;
-  attendeesCount: number;
-  status: 'draft' | 'published' | 'registration_open' | 'ongoing' | 'completed' | 'cancelled';
+  status: 'draft' | 'published' | 'registration_open' | 'ongoing' | 'completed' | 'cancelled' | 'HOD_APPROVAL_PENDING' | 'ACTIVE';
   tags: string[];
   requirements?: string;
   agenda?: AgendaItem[];
