@@ -66,6 +66,37 @@ const FacultyDashboard = () => {
         </div>
       </motion.div>
 
+      {/* Club Head Controls - Only for Faculty with isClubHead=true */}
+      {user?.isClubHead && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white shadow-lg mb-8"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-white/20 hover:bg-white/30 border-0">Club Head Access</Badge>
+              </div>
+              <h2 className="text-2xl font-bold">Manage Your Club</h2>
+              <p className="text-white/80 mt-1 max-w-2xl">
+                You have special privileges to manage club activities, coordinators, and announcements.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="secondary" className="whitespace-nowrap" onClick={() => navigate('/dashboard/club/manage')}>
+                <Users className="mr-2 h-4 w-4" />
+                Manage Members
+              </Button>
+              <Button variant="secondary" className="whitespace-nowrap" onClick={() => navigate('/dashboard/club/settings')}>
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Club Settings
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (

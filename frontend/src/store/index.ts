@@ -24,6 +24,9 @@ interface RegisterData {
   collegeId?: string;
   department?: string;
   year?: number;
+  directorRole?: string;
+  facultySubRole?: string;
+  academicYear?: number;
 }
 
 // Mock user data for demo
@@ -97,6 +100,21 @@ const mockUsers: Record<string, User> = {
     createdAt: new Date('2023-01-15'),
     isEmailVerified: true,
   },
+  'hod@college.edu': {
+    id: '6',
+    email: 'hod@college.edu',
+    firstName: 'Prof. Robert',
+    lastName: 'Williams',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robert',
+    role: 'hod',
+    collegeId: '1',
+    collegeName: 'Tech University',
+    department: 'Computer Science',
+    points: 1200,
+    streak: 12,
+    createdAt: new Date('2022-01-10'),
+    isEmailVerified: true,
+  },
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -156,6 +174,9 @@ export const useAuthStore = create<AuthState>()(
             collegeId: data.collegeId,
             department: data.department,
             year: data.year,
+            academicYear: data.academicYear,
+            facultySubRole: data.facultySubRole,
+            directorRole: data.directorRole,
           };
 
           await api.post('/auth/register', payload);

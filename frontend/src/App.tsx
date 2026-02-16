@@ -40,6 +40,9 @@ import FacultyAnalyticsDashboard from '@/pages/dashboard/FacultyAnalyticsDashboa
 import FacultyStudentManagement from '@/pages/dashboard/FacultyStudentManagement';
 
 import SuperAdminDashboard from '@/pages/dashboard/SuperAdminDashboard';
+import HodDashboard from '@/pages/dashboard/HodDashboard';
+import DeanDashboard from '@/pages/dashboard/DeanDashboard';
+import FacultyCoordinatorDashboard from '@/pages/dashboard/FacultyCoordinatorDashboard';
 import JudgeDashboard from '@/pages/dashboard/JudgeDashboard';
 import ClubsPage from '@/pages/dashboard/ClubsPage';
 import ClubDetailPage from '@/pages/dashboard/ClubDetailPage';
@@ -53,6 +56,13 @@ import WebinarDetailPage from '@/pages/dashboard/WebinarDetailPage';
 import EventCalendarPage from '@/pages/dashboard/EventCalendarPage';
 import SupportCenter from '@/pages/dashboard/SupportCenter';
 import TicketDetailPage from '@/pages/dashboard/TicketDetailPage';
+
+import JudgeEventDetails from '@/pages/dashboard/JudgeEventDetails';
+import EvaluationPage from '@/pages/dashboard/EvaluationPage';
+import AssignedEvents from '@/pages/dashboard/AssignedEvents';
+import HodScoresPage from '@/pages/dashboard/HodScoresPage';
+
+import JudgeManagement from '@/pages/dashboard/JudgeManagement';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
@@ -75,11 +85,40 @@ const DashboardRedirect = () => {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  // Prioritize Sub-Roles for specific dashboards
+  if (user.subRole) {
+    switch (user.subRole) {
+      case 'hod':
+        return <Navigate to="/dashboard/hod" replace />;
+      case 'college_admin':
+        return <Navigate to="/dashboard/college-admin" replace />;
+      case 'super_admin':
+        return <Navigate to="/dashboard/super-admin" replace />;
+      case 'judge':
+        return <Navigate to="/dashboard/judge" replace />;
+      case 'faculty_coordinator':
+        return <Navigate to="/dashboard/coordinator" replace />;
+      case 'dean_of_campus':
+        return <Navigate to="/dashboard/dean" replace />;
+      // Faculty Member & Club Head go to Faculty Dashboard
+      case 'faculty_member':
+      case 'club_head':
+        return <Navigate to="/dashboard/faculty" replace />;
+    }
+  }
+
+  // Fallback to Primary Role if subRole is missing or didn't match specific dashboard
   switch (user.role) {
     case 'super_admin':
       return <Navigate to="/dashboard/super-admin" replace />;
+    case 'dean_of_campus':
+      return <Navigate to="/dashboard/dean" replace />;
     case 'college_admin':
       return <Navigate to="/dashboard/college-admin" replace />;
+    case 'hod':
+      return <Navigate to="/dashboard/hod" replace />;
+    case 'faculty_coordinator':
+      return <Navigate to="/dashboard/coordinator" replace />;
     case 'faculty':
       return <Navigate to="/dashboard/faculty" replace />;
     case 'judge':
@@ -131,6 +170,7 @@ function App() {
 
           {/* Dashboard Routes */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+            {/* Dashboard Routes */}
             <Route path="/dashboard" element={<DashboardRedirect />} />
             <Route path="/dashboard/student" element={<StudentDashboard />} />
             <Route path="/dashboard/student/my-hackathons" element={<MyHackathonsPage />} />
@@ -150,12 +190,21 @@ function App() {
             <Route path="/dashboard/faculty/analytics" element={<FacultyAnalyticsDashboard />} />
             <Route path="/dashboard/faculty/students" element={<FacultyStudentManagement />} />
 
+            <Route path="/dashboard/coordinator" element={<FacultyCoordinatorDashboard />} />
+
             <Route path="/dashboard/college-admin" element={<CollegeAdminDashboard />} />
             <Route path="/dashboard/college-admin/webinars" element={<AdminWebinarsPage />} />
             <Route path="/dashboard/college-admin/webinars/create" element={<CreateWebinarPage />} />
             <Route path="/dashboard/college-admin/webinars/edit/:id" element={<CreateWebinarPage />} />
             <Route path="/dashboard/super-admin" element={<SuperAdminDashboard />} />
+            <Route path="/dashboard/hod" element={<HodDashboard />} />
+            <Route path="/dashboard/hod/scores/:eventId" element={<HodScoresPage />} />
+            <Route path="/dashboard/hod/judges" element={<JudgeManagement />} />
+            <Route path="/dashboard/dean" element={<DeanDashboard />} />
             <Route path="/dashboard/judge" element={<JudgeDashboard />} />
+            <Route path="/dashboard/judge/events" element={<AssignedEvents />} />
+            <Route path="/dashboard/judge/events/:eventId" element={<JudgeEventDetails />} />
+            <Route path="/dashboard/judge/evaluate/:submissionId" element={<EvaluationPage />} />
 
             {/* Club Routes */}
             <Route path="/dashboard/student/clubs" element={<ClubsPage />} />

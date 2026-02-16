@@ -53,6 +53,8 @@ const RegisterPage = () => {
     collegeId: '',
     department: '',
     year: '',
+    directorRole: '',
+    facultySubRole: '',
   });
 
   const handleNext = () => {
@@ -67,6 +69,14 @@ const RegisterPage = () => {
       }
       if (formData.role === 'student' && (!formData.collegeId || !formData.year)) {
         toast.error('Institutional verification data missing');
+        return;
+      }
+      if (formData.role === 'faculty' && (!formData.collegeId || !formData.facultySubRole)) {
+        toast.error('Faculty role assignment missing');
+        return;
+      }
+      if (formData.role === 'director' && (!formData.collegeId || !formData.directorRole)) {
+        toast.error('Director level assignment missing');
         return;
       }
     }
@@ -94,7 +104,9 @@ const RegisterPage = () => {
         role: formData.role as UserRole,
         collegeId: formData.collegeId,
         department: formData.department,
-        year: formData.year ? parseInt(formData.year) : undefined,
+        academicYear: formData.role === 'student' && formData.year ? parseInt(formData.year) : undefined,
+        facultySubRole: formData.role === 'faculty' ? formData.facultySubRole : undefined,
+        directorRole: formData.role === 'director' ? formData.directorRole : undefined,
       });
       toast.success('Registration successful. Please login to continue.');
       navigate('/login');
@@ -108,7 +120,20 @@ const RegisterPage = () => {
   const roles = [
     { value: 'student', label: 'Competitor', icon: Rocket, description: 'Enter arenas, build teams, and win big' },
     { value: 'faculty', label: 'Architect', icon: Building2, description: 'Design challenges and mentor legends' },
-    { value: 'college_admin', label: 'Director', icon: ShieldCheck, description: 'Manage institutional nodes and access' },
+    { value: 'director', label: 'Director', icon: ShieldCheck, description: 'Manage institutional nodes and access' },
+  ];
+
+  const directorSubRoles = [
+    { value: 'hod', label: 'Head of Department' },
+    { value: 'college_admin', label: 'College Admin' },
+    { value: 'super_admin', label: 'Super Admin' },
+    { value: 'judge', label: 'Judge' }
+  ];
+
+  const facultySubRoles = [
+    { value: 'faculty_member', label: 'Faculty Member' },
+    { value: 'faculty_coordinator', label: 'Faculty Coordinator' },
+    { value: 'club_head', label: 'Club Head (Advisor)' }
   ];
 
   const departments = [
@@ -307,20 +332,62 @@ const RegisterPage = () => {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Conditional Dropdown based on Role */}
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Current Cycle (Year)</label>
-                      <Select value={formData.year} onValueChange={val => setFormData({ ...formData, year: val })}>
-                        <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase">
-                          <SelectValue placeholder="YEAR..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl">
-                          {years.map((y) => (
-                            <SelectItem key={y} value={y} className="font-black text-xs uppercase">
-                              YEAR {y}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {formData.role === 'student' && (
+                        <>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Current Cycle (Year)</label>
+                          <Select value={formData.year} onValueChange={val => setFormData({ ...formData, year: val })}>
+                            <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase">
+                              <SelectValue placeholder="YEAR..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl">
+                              {years.map((y) => (
+                                <SelectItem key={y} value={y} className="font-black text-xs uppercase">
+                                  YEAR {y}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </>
+                      )}
+
+                      {formData.role === 'faculty' && (
+                        <>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Faculty Role</label>
+                          <Select value={formData.facultySubRole} onValueChange={val => setFormData({ ...formData, facultySubRole: val })}>
+                            <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase">
+                              <SelectValue placeholder="SELECT ROLE..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl">
+                              {facultySubRoles.map((role) => (
+                                <SelectItem key={role.value} value={role.value} className="font-black text-xs uppercase">
+                                  {role.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </>
+                      )}
+
+                      {formData.role === 'director' && (
+                        <>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Director Role</label>
+                          <Select value={formData.directorRole} onValueChange={val => setFormData({ ...formData, directorRole: val })}>
+                            <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-900 border-none font-black text-xs uppercase">
+                              <SelectValue placeholder="SELECT ROLE..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 rounded-2xl">
+                              {directorSubRoles.map((role) => (
+                                <SelectItem key={role.value} value={role.value} className="font-black text-xs uppercase">
+                                  {role.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
