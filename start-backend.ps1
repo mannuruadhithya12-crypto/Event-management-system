@@ -26,7 +26,8 @@ Write-Host "📁 Working directory: $backendPath" -ForegroundColor Cyan
 Write-Host ""
 
 # Start Spring Boot
-Write-Host "🚀 Starting Spring Boot application..." -ForegroundColor Green
+# Start Spring Boot
+Write-Host "Starting Spring Boot application..." -ForegroundColor Green
 Write-Host ""
 Write-Host "Wait for 'Started EventManagerApplication' message..." -ForegroundColor Yellow
 Write-Host "Backend will be available at: http://localhost:8080" -ForegroundColor Cyan

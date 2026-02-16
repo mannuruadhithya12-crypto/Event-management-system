@@ -19,14 +19,30 @@ public class Certificate {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+    
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private String userId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
+    
+    @Column(name = "event_id", insertable = false, updatable = false)
+    private String eventId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "hackathon_id")
     private Hackathon hackathon;
+    
+    @Column(name = "hackathon_id", insertable = false, updatable = false)
+    private String hackathonId; // Read-only denormalized field
+    
+    @ManyToOne
+    @JoinColumn(name = "issuer_id")
+    private User issuer; // Faculty who issued the certificate
+    
+    @Column(name = "issuer_id", insertable = false, updatable = false)
+    private String issuerId; // Read-only denormalized field
 
     @Column(unique = true, nullable = false)
     private String certificateId; // Public unique ID
@@ -44,6 +60,9 @@ public class Certificate {
     private String qrCodeUrl;
     @Column(columnDefinition = "TEXT")
     private String pdfUrl;
+    
+    @Column(unique = true)
+    private String verificationCode; // Unique code for QR verification
 
     @CreatedDate
     @Column(updatable = false)

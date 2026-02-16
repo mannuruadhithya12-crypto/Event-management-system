@@ -14,4 +14,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, String> 
     List<Submission> findByTeamId(String teamId);
 
     List<Submission> findByUserId(String userId);
+    
+    List<Submission> findByHackathonIdOrderByTotalScoreDesc(String hackathonId);
 }

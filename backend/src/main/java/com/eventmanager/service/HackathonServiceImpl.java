@@ -90,7 +90,7 @@ public class HackathonServiceImpl implements HackathonService {
 
     @Override
     public List<Hackathon> getHackathonsByOrganizer(String organizerId) {
-        return hackathonRepository.findByOrganizerId(organizerId);
+        return hackathonRepository.findByOrganizer_Id(organizerId);
     }
 
     @Override

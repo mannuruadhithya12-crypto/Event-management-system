@@ -28,7 +28,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Override
     public Submission submitProject(Submission submission) {
         submission.setSubmittedAt(LocalDateTime.now());
-        submission.setStatus("PENDING");
+        submission.setStatus(Submission.SubmissionStatus.PENDING);
         Submission saved = submissionRepository.save(submission);
 
         String userId = submission.getUser() != null ? submission.getUser().getId() : null;

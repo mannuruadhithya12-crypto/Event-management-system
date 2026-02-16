@@ -20,6 +20,10 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
         ...options.headers,
     };
 
+    if (options.body instanceof FormData) {
+        delete headers['Content-Type'];
+    }
+
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
@@ -27,6 +31,13 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
     // Add timeout support
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+    // console.log(`[API Debug] Fetching: ${BASE_URL}${endpoint}`);
+    // if (token) {
+    //     console.log('[API Debug] Token present:', token.substring(0, 10) + '...');
+    // } else {
+    //     console.warn('[API Debug] No token found in localStorage');
+    // }
 
     try {
         const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -36,7 +47,10 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
         });
         clearTimeout(id);
 
+        // console.log(`[API Debug] Response status: ${response.status} for ${endpoint}`);
+
         if (response.status === 401) {
+            console.error('[API Error] 401 Unauthorized - redirecting to login');
             // Auto-logout on 401
             localStorage.removeItem('auth-storage');
             window.location.href = '/login';
@@ -45,18 +59,14 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => '');
+            console.error(`[API Error] ${response.status}: ${errorText}`);
             let errorMessage = `API Error: ${response.status}`;
 
             try {
                 const errorJson = JSON.parse(errorText);
-                // Handle ApiResponse error format
-                if (errorJson.message) {
-                    errorMessage = errorJson.message;
-                } else if (errorJson.error) {
-                    errorMessage = errorJson.error;
-                }
+                errorMessage = errorJson.message || errorMessage;
             } catch (e) {
-                errorMessage = errorText || errorMessage;
+                // Ignore json parse error
             }
 
             throw new Error(errorMessage);
@@ -64,12 +74,14 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
 
         // Parse JSON
         const data = await response.json();
+        // console.log(`[API Debug] Response data for ${endpoint}:`, data);
 
         // Check for ApiResponse wrapper
         if (data && typeof data === 'object' && 'success' in data) {
             if (data.success) {
                 return data.data;
             } else {
+                console.error('[API Error] Success=false:', data.message);
                 throw new Error(data.message || 'API Error');
             }
         }
@@ -81,6 +93,7 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
         if (error.name === 'AbortError') {
             throw new Error('Request timed out');
         }
+        console.error(`[API Error] Fetch error for ${endpoint}:`, error);
         throw error;
     }
 }
@@ -130,6 +143,123 @@ export const api = {
 
         return response.blob();
     },
+};
+
+// Faculty API
+export const facultyApi = {
+    // Dashboard
+    getDashboardStats: async () => {
+        try {
+            return await api.get<any>('/faculty/dashboard/stats');
+        } catch (error: any) {
+            if (error.message?.includes('timed out') || error.message?.includes('Failed to fetch')) {
+                console.warn('Backend unavailable, using mock data');
+                const { mockFacultyData } = await import('./mockData');
+                return mockFacultyData.dashboardStats;
+            }
+            throw error;
+        }
+    },
+    getRecentActivity: async (limit: number = 10) => {
+        try {
+            return await api.get<any[]>(`/faculty/activity/recent?limit=${limit}`);
+        } catch (error: any) {
+            if (error.message?.includes('timed out') || error.message?.includes('Failed to fetch')) {
+                console.warn('Backend unavailable, using mock data');
+                const { mockFacultyData } = await import('./mockData');
+                return mockFacultyData.recentActivity.slice(0, limit);
+            }
+            throw error;
+        }
+    },
+
+    // Events
+    getEvents: async (page: number = 0, size: number = 10) => {
+        try {
+            return await api.get<any>(`/faculty/events?page=${page}&size=${size}`);
+        } catch (error: any) {
+            if (error.message?.includes('timed out') || error.message?.includes('Failed to fetch')) {
+                console.warn('Backend unavailable, using mock data');
+                const { mockFacultyData } = await import('./mockData');
+                return mockFacultyData.events;
+            }
+            throw error;
+        }
+    },
+    createEvent: (event: any) => api.post<any>('/faculty/events', event),
+    updateEvent: (id: string, event: any) => api.put<any>(`/faculty/events/${id}`, event),
+    deleteEvent: (id: string) => api.delete<any>(`/faculty/events/${id}`),
+
+    // Hackathons
+    getHackathons: async (page: number = 0, size: number = 10) => {
+        try {
+            return await api.get<any>(`/faculty/hackathons?page=${page}&size=${size}`);
+        } catch (error: any) {
+            if (error.message?.includes('timed out') || error.message?.includes('Failed to fetch')) {
+                console.warn('Backend unavailable, using mock data');
+                const { mockFacultyData } = await import('./mockData');
+                return mockFacultyData.hackathons;
+            }
+            throw error;
+        }
+    },
+    createHackathon: (hackathon: any) => api.post<any>('/faculty/hackathons', hackathon),
+    updateHackathon: (id: string, hackathon: any) => api.put<any>(`/faculty/hackathons/${id}`, hackathon),
+    deleteHackathon: (id: string) => api.delete<any>(`/faculty/hackathons/${id}`),
+
+    // Students
+    getStudents: async () => {
+        try {
+            return await api.get<any[]>('/faculty/students');
+        } catch (error: any) {
+            if (error.message?.includes('timed out') || error.message?.includes('Failed to fetch')) {
+                console.warn('Backend unavailable, using mock data');
+                const { mockFacultyData } = await import('./mockData');
+                return mockFacultyData.students;
+            }
+            throw error;
+        }
+    },
+
+    // Analytics
+    getAnalytics: async () => {
+        try {
+            return await api.get<any>('/faculty/analytics');
+        } catch (error: any) {
+            if (error.message?.includes('timed out') || error.message?.includes('Failed to fetch')) {
+                console.warn('Backend unavailable, using mock data');
+                const { mockFacultyData } = await import('./mockData');
+                return mockFacultyData.analytics;
+            }
+            throw error;
+        }
+    },
+
+    // Detailed Event Management
+    getEvent: (id: string) => api.get<any>(`/faculty/events/${id}`),
+    getEventRegistrations: (id: string) => api.get<any[]>(`/faculty/events/${id}/registrations`),
+    markAttendance: (id: string, userIds: string[]) => api.post<any>(`/faculty/events/${id}/attendance`, { userIds }),
+
+    // Detailed Hackathon Management
+    getHackathon: (id: string) => api.get<any>(`/faculty/hackathons/${id}`),
+    getHackathonTeams: (id: string) => api.get<any[]>(`/faculty/hackathons/${id}/teams`),
+    getHackathonLeaderboard: (id: string) => api.get<any[]>(`/faculty/hackathons/${id}/leaderboard`),
+    scoreSubmission: (id: string, scoreData: any) => api.post<any>(`/faculty/hackathons/${id}/score`, scoreData),
+
+    // Resources
+    getResources: () => api.get<any[]>('/faculty/resources'),
+    uploadResource: (data: FormData) => fetchAPI<any>('/faculty/resources/upload', {
+        method: 'POST',
+        body: data,
+        // Content-Type header is automatically set by browser for FormData
+        headers: {}
+    }),
+    deleteResource: (id: string) => api.delete<any>(`/faculty/resources/${id}`),
+
+    // Certificates
+    generateCertificates: (eventId: string, userIds: string[]) => api.post<any>('/faculty/certificates/generate', { eventId, userIds }),
+    getCertificates: (page: number = 0, size: number = 10) => api.get<any>(`/faculty/certificates?page=${page}&size=${size}`),
+    revokeCertificate: (id: string) => api.put<any>(`/faculty/certificates/${id}/revoke`, {}),
 };
 
 export const clubApi = {

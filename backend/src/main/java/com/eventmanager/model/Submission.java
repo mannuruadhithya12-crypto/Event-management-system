@@ -15,18 +15,30 @@ public class Submission {
     @ManyToOne
     @JoinColumn(name = "hackathon_id")
     private Hackathon hackathon;
+    
+    @Column(name = "hackathon_id", insertable = false, updatable = false)
+    private String hackathonId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
+    
+    @Column(name = "event_id", insertable = false, updatable = false)
+    private String eventId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "team_id")
     private Team team;
+    
+    @Column(name = "team_id", insertable = false, updatable = false)
+    private String teamId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+    
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private String userId; // Read-only denormalized field
 
     private String projectTitle;
 
@@ -40,10 +52,24 @@ public class Submission {
     private String fileUrl;
 
     private Double score;
+    
+    // Individual scoring criteria
+    private Integer innovationScore = 0;
+    private Integer implementationScore = 0;
+    private Integer presentationScore = 0;
+    private Integer impactScore = 0;
+    private Integer totalScore = 0;
+    
     private String feedback;
 
     private LocalDateTime submittedAt = LocalDateTime.now();
-    private String status; // PENDING, EVALUATED
+    
+    @Enumerated(EnumType.STRING)
+    private SubmissionStatus status = SubmissionStatus.PENDING;
+    
+    public enum SubmissionStatus {
+        PENDING, EVALUATED, REJECTED
+    }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -75,6 +101,4 @@ public class Submission {
     public void setFeedback(String feedback) { this.feedback = feedback; }
     public LocalDateTime getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 }

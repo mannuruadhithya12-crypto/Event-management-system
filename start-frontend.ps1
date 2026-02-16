@@ -13,7 +13,8 @@ Write-Host "📁 Working directory: $frontendPath" -ForegroundColor Cyan
 Write-Host ""
 
 # Start Vite dev server
-Write-Host "🚀 Starting Vite development server..." -ForegroundColor Green
+# Start Vite dev server
+Write-Host "Starting Vite development server..." -ForegroundColor Green
 Write-Host ""
 Write-Host "Frontend will be available at: http://localhost:5173" -ForegroundColor Cyan
 Write-Host ""

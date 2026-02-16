@@ -60,7 +60,7 @@ const getMenuItems = (role: string) => {
         { name: 'Overview', href: '/dashboard/faculty', icon: LayoutDashboard },
         { name: 'My Events', href: '/dashboard/faculty/events', icon: Calendar },
         { name: 'My Hackathons', href: '/dashboard/faculty/hackathons', icon: Trophy },
-        { name: 'Content', href: '/dashboard/faculty/content', icon: FolderOpen },
+        { name: 'Resources', href: '/dashboard/faculty/resources', icon: FolderOpen },
         { name: 'Students', href: '/dashboard/faculty/students', icon: GraduationCap },
         { name: 'Analytics', href: '/dashboard/faculty/analytics', icon: BarChart3 },
       ];

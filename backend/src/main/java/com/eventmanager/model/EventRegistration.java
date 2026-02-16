@@ -18,14 +18,24 @@ public class EventRegistration {
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
+    
+    @Column(name = "event_id", insertable = false, updatable = false)
+    private String eventId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+    
+    @Column(name = "user_id", insertable = false, updatable = false)
+    private String userId; // Read-only denormalized field
 
     private LocalDateTime registrationDate = LocalDateTime.now();
+    
+    private LocalDateTime createdAt = LocalDateTime.now(); // For queries
 
     private String status = "REGISTERED"; 
+    
+    private Boolean attended = false; // Track attendance
 
     private Boolean certificateIssued = false;
 

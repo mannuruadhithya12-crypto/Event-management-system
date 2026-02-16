@@ -16,17 +16,28 @@ public class Team {
     @ManyToOne
     @JoinColumn(name = "hackathon_id")
     private Hackathon hackathon;
+    
+    @Column(name = "hackathon_id", insertable = false, updatable = false)
+    private String hackathonId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "leader_id")
     private User leader;
+    
+    @Column(name = "leader_id", insertable = false, updatable = false)
+    private String leaderId; // Read-only denormalized field
 
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
+    
+    @Column(name = "event_id", insertable = false, updatable = false)
+    private String eventId; // Read-only denormalized field
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private java.util.List<TeamMember> members;
+    
+    private Integer memberCount = 0; // Denormalized for queries
 
     private String projectName;
 

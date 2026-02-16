@@ -35,9 +35,18 @@ import TeamDetailsPage from '@/pages/dashboard/team/TeamDetailsPage';
 import StudentAnalyticsDashboard from '@/pages/dashboard/StudentAnalyticsDashboard';
 import FacultyDashboard from '@/pages/dashboard/FacultyDashboard';
 import FacultyEventsDashboard from '@/pages/dashboard/FacultyEventsDashboard';
+import FacultyEventDetailPage from '@/pages/dashboard/FacultyEventDetailPage';
+import FacultyEventCreatePage from '@/pages/dashboard/FacultyEventCreatePage';
 import FacultyHackathonsDashboard from '@/pages/dashboard/FacultyHackathonsDashboard';
+import FacultyHackathonDetailPage from '@/pages/dashboard/FacultyHackathonDetailPage';
+import FacultyHackathonCreatePage from '@/pages/dashboard/FacultyHackathonCreatePage';
 import FacultyAnalyticsDashboard from '@/pages/dashboard/FacultyAnalyticsDashboard';
 import FacultyStudentManagement from '@/pages/dashboard/FacultyStudentManagement';
+import FacultyResourcesPage from '@/pages/dashboard/FacultyResourcesPage';
+import FacultyWebinarsPage from '@/pages/dashboard/FacultyWebinarsPage';
+import FacultyClubsPage from '@/pages/dashboard/FacultyClubsPage';
+import FacultyCertificatesPage from '@/pages/dashboard/FacultyCertificatesPage';
+import FacultyNotificationsPage from '@/pages/dashboard/FacultyNotificationsPage';
 
 import SuperAdminDashboard from '@/pages/dashboard/SuperAdminDashboard';
 import JudgeDashboard from '@/pages/dashboard/JudgeDashboard';
@@ -53,6 +62,8 @@ import WebinarDetailPage from '@/pages/dashboard/WebinarDetailPage';
 import EventCalendarPage from '@/pages/dashboard/EventCalendarPage';
 import SupportCenter from '@/pages/dashboard/SupportCenter';
 import TicketDetailPage from '@/pages/dashboard/TicketDetailPage';
+import CertificateVerificationPage from '@/pages/CertificateVerificationPage';
+import ClubMemberManagementPage from '@/pages/dashboard/ClubMemberManagementPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
@@ -146,9 +157,20 @@ function App() {
 
             <Route path="/dashboard/faculty" element={<FacultyDashboard />} />
             <Route path="/dashboard/faculty/events" element={<FacultyEventsDashboard />} />
+            <Route path="/dashboard/faculty/events/create" element={<FacultyEventCreatePage />} />
+            <Route path="/dashboard/faculty/events/:id" element={<FacultyEventDetailPage />} />
+            <Route path="/dashboard/faculty/events/:id/edit" element={<FacultyEventCreatePage />} />
             <Route path="/dashboard/faculty/hackathons" element={<FacultyHackathonsDashboard />} />
+            <Route path="/dashboard/faculty/hackathons/create" element={<FacultyHackathonCreatePage />} />
+            <Route path="/dashboard/faculty/hackathons/:id" element={<FacultyHackathonDetailPage />} />
+            <Route path="/dashboard/faculty/hackathons/:id/edit" element={<FacultyHackathonCreatePage />} />
             <Route path="/dashboard/faculty/analytics" element={<FacultyAnalyticsDashboard />} />
             <Route path="/dashboard/faculty/students" element={<FacultyStudentManagement />} />
+            <Route path="/dashboard/faculty/resources" element={<FacultyResourcesPage />} />
+            <Route path="/dashboard/faculty/webinars" element={<FacultyWebinarsPage />} />
+            <Route path="/dashboard/faculty/clubs" element={<FacultyClubsPage />} />
+            <Route path="/dashboard/faculty/certificates" element={<FacultyCertificatesPage />} />
+            <Route path="/dashboard/faculty/notifications" element={<FacultyNotificationsPage />} />
 
             <Route path="/dashboard/college-admin" element={<CollegeAdminDashboard />} />
             <Route path="/dashboard/college-admin/webinars" element={<AdminWebinarsPage />} />

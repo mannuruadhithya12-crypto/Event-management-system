@@ -47,6 +47,8 @@ public class CertificateController {
                 .body(pdf);
     }
 
+    // Duplicate endpoint - handled by CertificateVerificationController
+    /*
     @GetMapping("/certificates/verify/{certificateId}")
     public ResponseEntity<ApiResponse<CertificateDto>> verifyCertificate(@PathVariable String certificateId, HttpServletRequest request) {
         String ipAddress = request.getRemoteAddr();
@@ -54,6 +56,7 @@ public class CertificateController {
                 .map(dto -> ResponseEntity.ok(ApiResponse.success(dto)))
                 .orElse(ResponseEntity.status(404).body(ApiResponse.error("Certificate not found")));
     }
+    */
 
     @PostMapping("/certificates/seed")
     public ResponseEntity<ApiResponse<String>> seedCertificates(@RequestParam String userId) {
